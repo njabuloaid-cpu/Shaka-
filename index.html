@@ -1,28 +1,35 @@
+```html
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Shaka Zulu: Iklwa Empire • 3D</title>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
         :root { --zulu-red: #8B0000; --zulu-gold: #DAA520; }
-        body { margin:0; padding:0; background:#000; color:#fff; font-family:'Press Start 2P',system-ui; overflow:hidden; display:flex; flex-direction:column; align-items:center; height:100vh; }
+        body { margin:0; padding:0; background:#000; color:#fff; font-family:'Press Start 2P',system-ui; overflow:hidden; display:flex; flex-direction:column; align-items:center; height:100vh; touch-action:none; }
         header { width:100%; max-width:900px; background:var(--zulu-red); padding:10px 20px; display:flex; justify-content:space-between; align-items:center; box-shadow:0 4px 10px rgba(0,0,0,0.5); z-index:10; }
         .title { font-size:24px; letter-spacing:4px; text-shadow:3px 3px 0 #000; }
         .stats { display:flex; gap:15px; font-size:14px; }
         .health-bar { width:140px; height:20px; background:#222; border:3px solid var(--zulu-gold); position:relative; overflow:hidden; }
         .health-fill { height:100%; background:linear-gradient(#00ff00,#00cc00); transition:width 0.3s; }
-        #canvas { border:8px solid var(--zulu-gold); border-radius:8px; box-shadow:0 0 30px rgba(218,165,32,0.6); background:#111; width:900px; height:500px; }
+        #canvas { border:8px solid var(--zulu-gold); border-radius:8px; box-shadow:0 0 30px rgba(218,165,32,0.6); background:#111; width:100%; max-width:900px; height:500px; }
         .overlay { position:absolute; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.9); display:none; flex-direction:column; align-items:center; justify-content:center; z-index:100; text-align:center; padding:20px; box-sizing:border-box; }
         .overlay.active { display:flex; }
         .overlay h1 { font-size:48px; color:var(--zulu-gold); text-shadow:6px 6px 0 var(--zulu-red); margin-bottom:10px; letter-spacing:8px; }
         button { font-family:'Press Start 2P',system-ui; font-size:20px; padding:15px 40px; background:var(--zulu-red); color:#fff; border:6px solid var(--zulu-gold); cursor:pointer; margin-top:20px; box-shadow:0 6px 0 #000; transition:all 0.1s; }
         button:hover { transform:translateY(-4px); box-shadow:0 10px 0 #000; }
         .fact { font-size:14px; max-width:520px; background:rgba(255,255,255,0.1); padding:15px; border-left:6px solid var(--zulu-gold); margin-top:30px; }
-        .instructions { position:absolute; bottom:20px; left:20px; background:rgba(0,0,0,0.7); padding:10px 15px; font-size:13px; border:3px solid var(--zulu-gold); pointer-events:none; line-height:1.4; }
+        .instructions { position:absolute; bottom:20px; left:20px; background:rgba(0,0,0,0.7); padding:10px 15px; font-size:13px; border:3px solid var(--zulu-gold); pointer-events:none; line-height:1.4; z-index:50; }
         #objective-ui { position:absolute; top:85px; right:25px; background:rgba(139,0,0,0.85); color:var(--zulu-gold); padding:6px 14px; border:4px solid var(--zulu-gold); font-size:13px; display:none; box-shadow:0 4px 10px rgba(0,0,0,0.5); z-index:20; }
         #message { position:absolute; top:180px; left:50%; transform:translateX(-50%); background:var(--zulu-gold); color:#000; padding:12px 30px; font-size:18px; border:6px solid var(--zulu-red); display:none; box-shadow:0 0 25px var(--zulu-gold); text-align:center; z-index:120; white-space:pre-line; }
+        #minimap { position:absolute; top:92px; left:25px; width:160px; height:160px; border:5px solid var(--zulu-gold); border-radius:8px; box-shadow:0 0 20px rgba(218,165,32,0.8); z-index:30; background:rgba(20,40,20,0.85); }
+        #mobile-controls { position:absolute; bottom:15px; left:15px; right:15px; display:none; z-index:200; pointer-events:none; }
+        .joystick { width:130px; height:130px; background:rgba(218,165,32,0.25); border:8px solid var(--zulu-gold); border-radius:50%; position:relative; pointer-events:all; }
+        .joystick-knob { position:absolute; width:48px; height:48px; background:var(--zulu-gold); border-radius:50%; top:50%; left:50%; transform:translate(-50%,-50%); box-shadow:0 4px 12px rgba(0,0,0,0.6); transition:transform 0.05s; }
+        .action-btn { width:68px; height:68px; background:var(--zulu-red); border:6px solid var(--zulu-gold); color:#fff; font-size:14px; border-radius:50%; display:flex; align-items:center; justify-content:center; box-shadow:0 6px 0 #000; pointer-events:all; margin:6px; }
+        #story-overlay { display:none; background:rgba(0,0,0,0.88); z-index:130; pointer-events:none; }
         footer { width:100%; max-width:900px; padding:10px; text-align:center; font-size:12px; opacity:0.7; }
     </style>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r134/three.min.js"></script>
@@ -40,28 +47,41 @@
     </header>
 
     <canvas id="canvas" width="900" height="500"></canvas>
+    <canvas id="minimap" width="160" height="160"></canvas>
 
     <div class="instructions" id="instructions">
-        WASD / Arrows = Walk / Run<br>
-        SHIFT = Sprint<br>
-        SPACE = Jump<br>
-        MOUSE = Look + Aim (click canvas to lock)<br>
-        LEFT CLICK = Throw Iklwa (unlocked Stage 4)<br>
-        S = Stab (melee thrust)<br>
-        K = Kick (knockback — unlocked Stage 3)<br>
-        H = iHawu Shield Block (unlocked Stage 2)<br>
-        ESC = Pause
+        PC: WASD/Arrows + Mouse • SHIFT Sprint • SPACE Jump<br>
+        S=Stab • K=Kick • H=Shield • L-Click=Throw (Stage 4+)<br>
+        MOBILE: Joystick + on-screen buttons • Drag screen to look
     </div>
 
     <div id="objective-ui"></div>
     <div id="message"></div>
 
+    <!-- MOBILE CONTROLS -->
+    <div id="mobile-controls">
+        <div style="display:flex; justify-content:space-between; align-items:flex-end;">
+            <!-- Left: Joystick -->
+            <div id="joystick" class="joystick">
+                <div id="joystick-knob" class="joystick-knob"></div>
+            </div>
+            
+            <!-- Right: Action buttons -->
+            <div style="display:flex; flex-direction:column; gap:12px; align-items:flex-end;">
+                <div onclick="mobileAction('stab')" class="action-btn" id="btn-stab">S<br>STAB</div>
+                <div onclick="mobileAction('kick')" class="action-btn" id="btn-kick">K<br>KICK</div>
+                <div onclick="mobileAction('shield')" class="action-btn" id="btn-shield">H<br>SHIELD</div>
+                <div onclick="mobileAction('throw')" class="action-btn" id="btn-throw" style="display:none;">THROW</div>
+            </div>
+        </div>
+    </div>
+
     <div id="start-screen" class="overlay active">
         <h1>SHAKA ZULU</h1>
         <h2>IKLWA EMPIRE</h2>
-        <p>You are Shaka — walk the real Zulu lands.<br>Jump mountains, fight giants, collect legendary weapons.</p>
+        <p>Realistic 3D Zulu warrior • Full limb animation • PC + Mobile • Blood particles • Real sound FX</p>
         <button onclick="startGame()">BEGIN THE CONQUEST</button>
-        <div class="fact">God of War style 3D combat • 5 real Zulu stages with story • Progressive ability unlocks • Realistic terrains, rivers, mountains, animals &amp; giant beasts</div>
+        <div class="fact">5 authentic stages • Progressive unlocks • Separate arms/legs • Mini-map • Touch controls</div>
     </div>
 
     <div id="game-over-screen" class="overlay">
@@ -83,12 +103,12 @@
         <button onclick="quitToMenu()" style="margin-top:15px;background:#444;">RETURN TO KRAAL</button>
     </div>
 
-    <div id="story-overlay" class="overlay" style="display:none; background:rgba(0,0,0,0.88); z-index:130; pointer-events:none;">
+    <div id="story-overlay" class="overlay">
         <h1 id="story-stage" style="color:var(--zulu-gold);font-size:42px;letter-spacing:6px;margin-bottom:20px;text-shadow:4px 4px 0 var(--zulu-red);"></h1>
         <p id="story-text" style="max-width:660px;font-size:19px;line-height:1.7;text-align:center;color:#eee;"></p>
     </div>
 
-    <footer>Fully 3D single-file HTML game • Refined to exact 5-stage Zulu storyline • Progressive unlocks • Goal-based progression • Predator &amp; beast enemies • Shield actually blocks • Paste as index.html</footer>
+    <footer>FULL QUALITY EDITION • Realistic limb-by-limb animation • Blood particles • Enhanced sound FX • Mini-map • PC + Mobile touch controls • Paste as index.html</footer>
 
     <script>
         let scene, camera, renderer, playerGroup, player;
@@ -103,6 +123,10 @@
         let abilitiesUnlocked = {};
         let stageGoal = {x: 0, z: 0};
         let stageGoalMarker = null;
+        let isMobile = false;
+        let touchJoy = {active:false, dx:0, dz:0, startX:0, startY:0};
+        let lastTouchX = 0, lastTouchY = 0;
+        let minimapCtx;
 
         const stageData = [
             {name:"NDWANDWE HILLS", ground:0x2e5c2e, sky:0x5c8a5c, river:false, mountain:true, animals:true},
@@ -113,39 +137,48 @@
         ];
 
         const stageStories = [
-            {
-                title: "NDWANDWE HILLS",
-                text: "You are young Shaka, learning the ways of a warrior. The Ndwandwe tribe threatens the peace of your homeland.\nObjective: Train your combat skills by hunting wild animals and collecting basic weapons.\nReach the hilltop to signal your strength."
-            },
-            {
-                title: "QWABE VALLEY",
-                text: "The Qwabe elders challenge you to prove your bravery. Cross rivers and fight archers guarding the valley.\nObjective: Navigate rivers, defeat enemy archers, collect your first war spear.\nReach the valley center — gain first shield block ability."
-            },
-            {
-                title: "CHUNU PLAINS",
-                text: "The plains are vast, and dangerous beasts roam freely. Test your combat skills against bigger threats.\nObjective: Hunt or defeat roaming giant animals (buffalo, lions), fend off tribal warriors.\nReach the plains champion area — unlock kick attack."
-            },
-            {
-                title: "HLUBI RIVER",
-                text: "Enemies attempt an ambush near the Hlubi River. Cross the river, fight giants, and prove leadership.\nObjective: Use terrain to your advantage, master ranged combat, survive ambush.\nDefeat the river giants — unlock throw Iklwa ability."
-            },
-            {
-                title: "FINAL CONQUEST",
-                text: "The Ndwandwe return with full force. Unite the Zulu clans and claim the Iklwa Empire for your people.\nObjective: Defeat all enemy leaders, protect your warriors, collect ultimate weapons.\nConquer the final stronghold."
-            }
+            {title:"NDWANDWE HILLS", text:"You are young Shaka, learning the ways of a warrior. The Ndwandwe tribe threatens the peace of your homeland.\nObjective: Train your combat skills by hunting wild animals and collecting basic weapons.\nReach the hilltop to signal your strength."},
+            {title:"QWABE VALLEY", text:"The Qwabe elders challenge you to prove your bravery. Cross rivers and fight archers guarding the valley.\nObjective: Navigate rivers, defeat enemy archers, collect your first war spear.\nReach the valley center — gain first shield block ability."},
+            {title:"CHUNU PLAINS", text:"The plains are vast, and dangerous beasts roam freely. Test your combat skills against bigger threats.\nObjective: Hunt or defeat roaming giant animals (buffalo, lions), fend off tribal warriors.\nReach the plains champion area — unlock kick attack."},
+            {title:"HLUBI RIVER", text:"Enemies attempt an ambush near the Hlubi River. Cross the river, fight giants, and prove leadership.\nObjective: Use terrain to your advantage, master ranged combat, survive ambush.\nDefeat the river giants — unlock throw Iklwa ability."},
+            {title:"FINAL CONQUEST", text:"The Ndwandwe return with full force. Unite the Zulu clans and claim the Iklwa Empire for your people.\nObjective: Defeat all enemy leaders, protect your warriors, collect ultimate weapons.\nConquer the final stronghold."}
         ];
 
         function playSound(type) {
             if (!audioCtx) return;
             const osc = audioCtx.createOscillator();
             const gain = audioCtx.createGain();
-            osc.connect(gain); gain.connect(audioCtx.destination);
-            if (type==='throw') { osc.frequency.setValueAtTime(160,audioCtx.currentTime); gain.gain.value=0.3; osc.type='sawtooth'; }
-            else if (type==='stab') { osc.frequency.setValueAtTime(320,audioCtx.currentTime); gain.gain.value=0.5; osc.type='square'; }
-            else if (type==='kick') { osc.frequency.setValueAtTime(120,audioCtx.currentTime); gain.gain.value=0.6; osc.type='sine'; }
-            else if (type==='hit') { osc.frequency.setValueAtTime(420,audioCtx.currentTime); gain.gain.value=0.5; osc.type='square'; }
-            else if (type==='jump') { osc.frequency.setValueAtTime(220,audioCtx.currentTime); gain.gain.value=0.2; osc.type='triangle'; }
-            osc.start(); setTimeout(()=>osc.stop(), 120);
+            const filter = audioCtx.createBiquadFilter();
+            osc.connect(filter); filter.connect(gain); gain.connect(audioCtx.destination);
+            
+            if (type === 'throw') {
+                osc.frequency.setValueAtTime(180, audioCtx.currentTime);
+                osc.frequency.exponentialRampToValueAtTime(80, audioCtx.currentTime + 0.4);
+                gain.gain.value = 0.6; osc.type = 'sawtooth';
+                filter.type = 'lowpass'; filter.frequency.value = 1200;
+            } else if (type === 'stab') {
+                osc.frequency.setValueAtTime(420, audioCtx.currentTime);
+                gain.gain.value = 0.7; osc.type = 'square';
+                filter.type = 'highpass'; filter.frequency.value = 800;
+            } else if (type === 'kick') {
+                osc.frequency.setValueAtTime(90, audioCtx.currentTime);
+                gain.gain.value = 0.8; osc.type = 'sine';
+            } else if (type === 'hit') {
+                osc.frequency.setValueAtTime(620, audioCtx.currentTime);
+                gain.gain.value = 0.5; osc.type = 'square';
+                filter.type = 'lowpass'; filter.frequency.value = 400;
+            } else if (type === 'blood') {
+                osc.frequency.setValueAtTime(240, audioCtx.currentTime);
+                gain.gain.value = 0.4; osc.type = 'sine';
+            } else if (type === 'jump') {
+                osc.frequency.setValueAtTime(280, audioCtx.currentTime);
+                gain.gain.value = 0.3; osc.type = 'triangle';
+            } else if (type === 'warCry') {
+                osc.frequency.setValueAtTime(160, audioCtx.currentTime);
+                gain.gain.value = 0.9; osc.type = 'sawtooth';
+                filter.type = 'lowpass'; filter.frequency.value = 600;
+            }
+            osc.start(); setTimeout(() => osc.stop(), type==='throw' ? 420 : 140);
         }
 
         function initThree() {
@@ -159,80 +192,117 @@
 
             camera = new THREE.PerspectiveCamera(70, 900/500, 0.1, 300);
 
-            const ambient = new THREE.AmbientLight(0xaaaaaa, 0.8);
+            // Better realistic lighting
+            const hemi = new THREE.HemisphereLight(0x88aa77, 0x334422, 0.9);
+            scene.add(hemi);
+            const ambient = new THREE.AmbientLight(0xaaaaaa, 0.6);
             scene.add(ambient);
-            const sun = new THREE.DirectionalLight(0xffffff, 1.4);
-            sun.position.set(50, 90, 40);
+            const sun = new THREE.DirectionalLight(0xffeecc, 1.6);
+            sun.position.set(60, 110, 50);
             sun.castShadow = true;
             scene.add(sun);
 
-            // Detailed Shaka model with arms + legs
+            // PLAYER — FULL BODY WITH SEPARATE LIMBS
             playerGroup = new THREE.Group();
             scene.add(playerGroup);
 
-            // Torso
-            const torso = new THREE.Mesh(new THREE.CylinderGeometry(0.6, 0.8, 2.2, 8), new THREE.MeshPhongMaterial({color:0x3d2b1f}));
-            torso.position.y = 2.1;
+            // Torso (more realistic)
+            const torsoGeo = new THREE.BoxGeometry(1.4, 2.4, 1.1);
+            const torso = new THREE.Mesh(torsoGeo, new THREE.MeshPhongMaterial({color:0x3d2b1f, shininess:10}));
+            torso.position.y = 2.4;
             torso.castShadow = true;
             playerGroup.add(torso);
 
-            // Head + feather
-            const head = new THREE.Mesh(new THREE.SphereGeometry(0.7, 16, 16), new THREE.MeshPhongMaterial({color:0xd2a679}));
-            head.position.y = 3.8;
+            // Head + feather + isicoco ring
+            const head = new THREE.Mesh(new THREE.SphereGeometry(0.72, 24, 24), new THREE.MeshPhongMaterial({color:0xd2a679}));
+            head.position.y = 4.4;
             head.castShadow = true;
             playerGroup.add(head);
-            const feather = new THREE.Mesh(new THREE.ConeGeometry(0.2, 1.2, 4), new THREE.MeshPhongMaterial({color:0xffffff}));
-            feather.position.set(0.6, 4.4, 0);
+            const feather = new THREE.Mesh(new THREE.ConeGeometry(0.22, 1.4, 5), new THREE.MeshPhongMaterial({color:0xffffff}));
+            feather.position.set(0.7, 5.1, 0);
             feather.rotation.z = Math.PI / 3;
             playerGroup.add(feather);
 
-            // Left arm (for shield)
-            const leftArm = new THREE.Mesh(new THREE.CylinderGeometry(0.2, 0.25, 1.6, 6), new THREE.MeshPhongMaterial({color:0x3d2b1f}));
-            leftArm.position.set(-0.9, 2.6, 0);
-            leftArm.rotation.z = Math.PI / 3;
-            playerGroup.add(leftArm);
-            const leftHand = new THREE.Mesh(new THREE.SphereGeometry(0.3, 8, 8), new THREE.MeshPhongMaterial({color:0xd2a679}));
-            leftHand.position.set(-1.4, 1.8, 0);
-            playerGroup.add(leftHand);
+            // Arms — upper + lower for full animation
+            // LEFT ARM (shield)
+            const leftUpperArm = new THREE.Mesh(new THREE.CylinderGeometry(0.22, 0.26, 1.4, 8), new THREE.MeshPhongMaterial({color:0x3d2b1f}));
+            leftUpperArm.position.set(-0.95, 3.1, 0);
+            leftUpperArm.rotation.z = Math.PI / 3;
+            playerGroup.add(leftUpperArm);
+            const leftLowerArm = new THREE.Mesh(new THREE.CylinderGeometry(0.2, 0.24, 1.3, 8), new THREE.MeshPhongMaterial({color:0x3d2b1f}));
+            leftLowerArm.position.set(0, -0.9, 0);
+            leftUpperArm.add(leftLowerArm);
+            const leftHand = new THREE.Mesh(new THREE.SphereGeometry(0.28, 10, 10), new THREE.MeshPhongMaterial({color:0xd2a679}));
+            leftHand.position.set(0, -0.9, 0);
+            leftLowerArm.add(leftHand);
 
-            // Right arm (for spear)
-            const rightArm = new THREE.Mesh(new THREE.CylinderGeometry(0.2, 0.25, 1.6, 6), new THREE.MeshPhongMaterial({color:0x3d2b1f}));
-            rightArm.position.set(0.9, 2.6, 0);
-            rightArm.rotation.z = -Math.PI / 3;
-            playerGroup.add(rightArm);
-            const rightHand = new THREE.Mesh(new THREE.SphereGeometry(0.3, 8, 8), new THREE.MeshPhongMaterial({color:0xd2a679}));
-            rightHand.position.set(1.4, 1.8, 0);
-            playerGroup.add(rightHand);
+            // RIGHT ARM (weapon)
+            const rightUpperArm = new THREE.Mesh(new THREE.CylinderGeometry(0.22, 0.26, 1.4, 8), new THREE.MeshPhongMaterial({color:0x3d2b1f}));
+            rightUpperArm.position.set(0.95, 3.1, 0);
+            rightUpperArm.rotation.z = -Math.PI / 3;
+            playerGroup.add(rightUpperArm);
+            const rightLowerArm = new THREE.Mesh(new THREE.CylinderGeometry(0.2, 0.24, 1.3, 8), new THREE.MeshPhongMaterial({color:0x3d2b1f}));
+            rightLowerArm.position.set(0, -0.9, 0);
+            rightUpperArm.add(rightLowerArm);
+            const rightHand = new THREE.Mesh(new THREE.SphereGeometry(0.28, 10, 10), new THREE.MeshPhongMaterial({color:0xd2a679}));
+            rightHand.position.set(0, -0.9, 0);
+            rightLowerArm.add(rightHand);
 
-            // Legs
-            const leftLeg = new THREE.Mesh(new THREE.CylinderGeometry(0.25, 0.3, 1.8, 6), new THREE.MeshPhongMaterial({color:0x3d2b1f}));
-            leftLeg.position.set(-0.4, 0.9, 0);
-            playerGroup.add(leftLeg);
-            const rightLeg = new THREE.Mesh(new THREE.CylinderGeometry(0.25, 0.3, 1.8, 6), new THREE.MeshPhongMaterial({color:0x3d2b1f}));
-            rightLeg.position.set(0.4, 0.9, 0);
-            playerGroup.add(rightLeg);
+            // Legs — upper + lower for realistic kick / walk
+            // LEFT LEG
+            const leftUpperLeg = new THREE.Mesh(new THREE.CylinderGeometry(0.28, 0.32, 1.6, 8), new THREE.MeshPhongMaterial({color:0x3d2b1f}));
+            leftUpperLeg.position.set(-0.45, 1.1, 0);
+            playerGroup.add(leftUpperLeg);
+            const leftLowerLeg = new THREE.Mesh(new THREE.CylinderGeometry(0.24, 0.28, 1.7, 8), new THREE.MeshPhongMaterial({color:0x3d2b1f}));
+            leftLowerLeg.position.set(0, -1.05, 0);
+            leftUpperLeg.add(leftLowerLeg);
+            const leftFoot = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.3, 1.1), new THREE.MeshPhongMaterial({color:0x222222}));
+            leftFoot.position.set(0, -1.05, 0.3);
+            leftLowerLeg.add(leftFoot);
 
-            // Iklwa spear (held in right hand)
-            const spear = new THREE.Mesh(new THREE.BoxGeometry(0.15, 0.15, 4.5), new THREE.MeshPhongMaterial({color:0x3d2b1f}));
-            spear.position.set(1.4, 2.4, 1.2);
-            spear.rotation.set(0.8, 0, 0);
-            playerGroup.add(spear);
+            // RIGHT LEG
+            const rightUpperLeg = new THREE.Mesh(new THREE.CylinderGeometry(0.28, 0.32, 1.6, 8), new THREE.MeshPhongMaterial({color:0x3d2b1f}));
+            rightUpperLeg.position.set(0.45, 1.1, 0);
+            playerGroup.add(rightUpperLeg);
+            const rightLowerLeg = new THREE.Mesh(new THREE.CylinderGeometry(0.24, 0.28, 1.7, 8), new THREE.MeshPhongMaterial({color:0x3d2b1f}));
+            rightLowerLeg.position.set(0, -1.05, 0);
+            rightUpperLeg.add(rightLowerLeg);
+            const rightFoot = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.3, 1.1), new THREE.MeshPhongMaterial({color:0x222222}));
+            rightFoot.position.set(0, -1.05, 0.3);
+            rightLowerLeg.add(rightFoot);
+
+            // Iklwa spear (right hand)
+            const spear = new THREE.Mesh(new THREE.BoxGeometry(0.16, 0.16, 4.8), new THREE.MeshPhongMaterial({color:0x3d2b1f, shininess:30}));
+            spear.position.set(0, -0.6, 0.8);
+            spear.rotation.set(0.9, 0, 0);
+            rightLowerArm.add(spear);
 
             // iHawu shield (left hand)
-            const shieldGeo = new THREE.PlaneGeometry(1.9, 2.4);
-            const shield = new THREE.Mesh(shieldGeo, new THREE.MeshPhongMaterial({color:0xd2a679, side:THREE.DoubleSide}));
-            shield.position.set(-1.6, 2.4, 0.6);
-            shield.rotation.y = Math.PI / 2.8;
-            playerGroup.add(shield);
+            const shieldGeo = new THREE.PlaneGeometry(2.0, 2.6);
+            const shield = new THREE.Mesh(shieldGeo, new THREE.MeshPhongMaterial({color:0xd2a679, side:THREE.DoubleSide, shininess:20}));
+            shield.position.set(0, -0.7, 1.1);
+            shield.rotation.y = Math.PI / 2.6;
+            leftLowerArm.add(shield);
 
+            // Store named limbs for animation
             player = playerGroup;
-            player.userData = { health: 100, weaponDamage: 1 };
+            player.userData = { 
+                health: 100, 
+                weaponDamage: 1,
+                leftUpperArm: leftUpperArm,
+                leftLowerArm: leftLowerArm,
+                rightUpperArm: rightUpperArm,
+                rightLowerArm: rightLowerArm,
+                leftUpperLeg: leftUpperLeg,
+                leftLowerLeg: leftLowerLeg,
+                rightUpperLeg: rightUpperLeg,
+                rightLowerLeg: rightLowerLeg
+            };
             return true;
         }
 
         let currentGround = null, currentRiver = null, currentMountains = [], currentTrees = [], currentAnimals = [];
         function createStage(stage) {
-            // Clean old objects
             if (currentGround) scene.remove(currentGround);
             if (currentRiver) scene.remove(currentRiver);
             currentMountains.forEach(m => scene.remove(m));
@@ -243,9 +313,8 @@
 
             const data = stageData[stage-1];
 
-            // Enhanced terrain with hills
-            const terrainGeo = new THREE.PlaneGeometry(260, 260, 64, 64);
-            const terrainMat = new THREE.MeshPhongMaterial({color: data.ground, flatShading: true});
+            const terrainGeo = new THREE.PlaneGeometry(260, 260, 80, 80);
+            const terrainMat = new THREE.MeshPhongMaterial({color: data.ground, flatShading: true, shininess:5});
             currentGround = new THREE.Mesh(terrainGeo, terrainMat);
             currentGround.rotation.x = -Math.PI / 2;
             currentGround.receiveShadow = true;
@@ -254,63 +323,50 @@
             const verts = currentGround.geometry.attributes.position.array;
             for (let i = 2; i < verts.length; i += 3) {
                 const x = verts[i-2], z = verts[i-1];
-                verts[i] = Math.sin(x/18) * 3.5 + Math.cos(z/14) * 2.8 + Math.random() * 0.8;
+                verts[i] = Math.sin(x/18)*3.5 + Math.cos(z/14)*2.8 + Math.random()*0.9;
             }
             currentGround.geometry.attributes.position.needsUpdate = true;
             currentGround.geometry.computeVertexNormals();
 
-            // River (if stage has one)
             if (data.river) {
-                currentRiver = new THREE.Mesh(
-                    new THREE.PlaneGeometry(260, 18),
-                    new THREE.MeshPhongMaterial({color: 0x2288ff, shininess: 80})
-                );
+                currentRiver = new THREE.Mesh(new THREE.PlaneGeometry(260, 22), new THREE.MeshPhongMaterial({color:0x2288ff, shininess:90}));
                 currentRiver.rotation.x = -Math.PI / 2;
-                currentRiver.position.set(0, 0.3, -40);
+                currentRiver.position.set(0, 0.4, -42);
                 scene.add(currentRiver);
             }
 
-            // Mountains (background cones)
             if (data.mountain) {
-                for (let i = 0; i < 6; i++) {
-                    const m = new THREE.Mesh(
-                        new THREE.ConeGeometry(18 + Math.random()*12, 45 + Math.random()*20, 6),
-                        new THREE.MeshPhongMaterial({color: 0x555555})
-                    );
-                    m.position.set((Math.random()-0.5)*220, 20, -120 - Math.random()*60);
+                for (let i = 0; i < 7; i++) {
+                    const m = new THREE.Mesh(new THREE.ConeGeometry(19 + Math.random()*14, 48 + Math.random()*22, 7), new THREE.MeshPhongMaterial({color:0x555555, flatShading:true}));
+                    m.position.set((Math.random()-0.5)*230, 22, -125 - Math.random()*70);
                     m.rotation.y = Math.random()*Math.PI;
                     scene.add(m);
                     currentMountains.push(m);
                 }
             }
 
-            // Trees — stage specific density
-            let numTrees = 28;
-            if (stage === 3) numTrees = 14;      // open plains
-            if (stage === 4) numTrees = 42;      // dense forest
+            let numTrees = stage === 3 ? 12 : (stage === 4 ? 48 : 28);
             for (let i = 0; i < numTrees; i++) {
-                const trunk = new THREE.Mesh(new THREE.CylinderGeometry(1.2, 1.6, 9, 6), new THREE.MeshPhongMaterial({color:0x8B4513}));
-                trunk.position.set((Math.random()-0.5)*200, 4.5, (Math.random()-0.5)*200);
+                const trunk = new THREE.Mesh(new THREE.CylinderGeometry(1.3, 1.7, 10, 7), new THREE.MeshPhongMaterial({color:0x8B4513}));
+                trunk.position.set((Math.random()-0.5)*200, 5, (Math.random()-0.5)*200);
                 trunk.castShadow = true;
                 scene.add(trunk);
                 currentTrees.push(trunk);
-
-                const foliage = new THREE.Mesh(new THREE.ConeGeometry(5, 12, 6), new THREE.MeshPhongMaterial({color:0x006400}));
-                foliage.position.set(trunk.position.x, 14, trunk.position.z);
+                const foliage = new THREE.Mesh(new THREE.ConeGeometry(5.5, 13, 7), new THREE.MeshPhongMaterial({color:0x006400}));
+                foliage.position.set(trunk.position.x, 15, trunk.position.z);
                 foliage.castShadow = true;
                 scene.add(foliage);
                 currentTrees.push(foliage);
             }
 
-            // Animals (passive)
             if (data.animals) {
                 for (let i = 0; i < 8; i++) {
                     const animal = new THREE.Group();
-                    const body = new THREE.Mesh(new THREE.BoxGeometry(4, 2.5, 8), new THREE.MeshPhongMaterial({color:0x8B5A2B}));
-                    body.position.y = 3;
+                    const body = new THREE.Mesh(new THREE.BoxGeometry(4.2, 2.6, 8.5), new THREE.MeshPhongMaterial({color:0x8B5A2B}));
+                    body.position.y = 3.2;
                     animal.add(body);
-                    const head = new THREE.Mesh(new THREE.SphereGeometry(1.4, 8, 8), new THREE.MeshPhongMaterial({color:0xd2a679}));
-                    head.position.set(0, 3.5, -4);
+                    const head = new THREE.Mesh(new THREE.SphereGeometry(1.5, 10, 10), new THREE.MeshPhongMaterial({color:0xd2a679}));
+                    head.position.set(0, 3.8, -4.2);
                     animal.add(head);
                     animal.position.set((Math.random()-0.5)*180, 0, (Math.random()-0.5)*160);
                     animal.rotation.y = Math.random()*Math.PI;
@@ -319,25 +375,600 @@
                 }
             }
 
-            // Stage-specific goal marker + objective
+            // Stage goal marker
             switch(stage) {
-                case 1: stageGoal = {x: 92, z: -88}; break;   // hilltop
-                case 2: stageGoal = {x: -12, z: 92}; break;   // valley center
-                case 3: stageGoal = {x: -88, z: 78}; break;   // plains champion area
-                case 4: stageGoal = {x: 88, z: -68}; break;   // river stronghold
-                case 5: stageGoal = {x: -95, z: -115}; break; // final conquest
+                case 1: stageGoal = {x: 95, z: -92}; break;
+                case 2: stageGoal = {x: -18, z: 95}; break;
+                case 3: stageGoal = {x: -92, z: 82}; break;
+                case 4: stageGoal = {x: 92, z: -72}; break;
+                case 5: stageGoal = {x: -98, z: -118}; break;
+            }
+            const markerGroup = new THREE.Group();
+            const pole = new THREE.Mesh(new THREE.CylinderGeometry(0.8, 1.1, 18, 8), new THREE.MeshPhongMaterial({color:0xDAA520, emissive:0xffee88}));
+            pole.position.y = 9;
+            markerGroup.add(pole);
+            const top = new THREE.Mesh(new THREE.ConeGeometry(3.5, 6, 5), new THREE.MeshPhongMaterial({color:0x8B0000}));
+            top.position.y = 19;
+            markerGroup.add(top);
+            markerGroup.position.set(stageGoal.x, 0, stageGoal.z);
+            scene.add(markerGroup);
+            stageGoalMarker = markerGroup;
+
+            scene.fog.color.setHex(data.sky);
+            document.getElementById('kingdom-ui').textContent = data.name;
+            updateObjective(stage);
+        }
+
+        function spawnEnemy(type = 'normal') {
+            const group = new THREE.Group();
+            let isBeast = type === 'beast' || type === 'predator';
+
+            if (isBeast) {
+                const scale = type === 'beast' ? 1.85 : 0.85;
+                const body = new THREE.Mesh(new THREE.BoxGeometry(4*scale, 2.6*scale, 8.5*scale), new THREE.MeshPhongMaterial({color: type==='beast' ? 0x8B5A2B : 0xA0522D}));
+                body.position.y = 3.2*scale;
+                group.add(body);
+                const head = new THREE.Mesh(new THREE.SphereGeometry(1.5*scale, 10, 10), new THREE.MeshPhongMaterial({color:0xd2a679}));
+                head.position.set(0, 3.8*scale, -4.2*scale);
+                group.add(head);
+                group.userData = {health: type==='beast' ? 16 : 5, speed: type==='beast' ? 0.12 : 0.26, type: type, isGiant: type==='beast'};
+            } else {
+                // Warrior with simple arm for attack animation
+                const torso = new THREE.Mesh(new THREE.CylinderGeometry(0.85, 1.05, 2.7, 9), new THREE.MeshPhongMaterial({color: type==='giant' ? 0x5c2a1a : 0x4a2a1a}));
+                torso.position.y = 2.5;
+                group.add(torso);
+                const head = new THREE.Mesh(new THREE.SphereGeometry(0.78, 14, 14), new THREE.MeshPhongMaterial({color:0xd2a679}));
+                head.position.y = 4.2;
+                group.add(head);
+                const spear = new THREE.Mesh(new THREE.BoxGeometry(0.19, 0.19, 4.2), new THREE.MeshPhongMaterial({color:0x3d2b1f}));
+                spear.position.set(0, 2.9, 1.9);
+                spear.rotation.x = Math.PI / 2;
+                group.add(spear);
+                if (type === 'archer') {
+                    group.remove(spear);
+                    const bow = new THREE.Mesh(new THREE.BoxGeometry(0.32, 2.9, 0.22), new THREE.MeshPhongMaterial({color:0x8B4513}));
+                    bow.position.set(0, 3.1, 1);
+                    bow.rotation.z = Math.PI / 2;
+                    group.add(bow);
+                }
+                if (type === 'giant') {
+                    torso.scale.set(1.65, 1.65, 1.65);
+                    head.scale.set(1.45, 1.45, 1.45);
+                }
+                group.userData = {
+                    health: type==='giant' ? 15 : (type==='archer' ? 5 : 4),
+                    speed: type==='giant' ? 0.1 : (type==='archer' ? 0.17 : 0.19),
+                    type: type,
+                    isArcher: type==='archer',
+                    isGiant: type==='giant',
+                    armAngle: 0,
+                    attackAnim: 0
+                };
+            }
+            group.position.set(player.position.x + 48 + Math.random()*38, 0, player.position.z + (Math.random()-0.5)*52);
+            scene.add(group);
+            enemies.push(group);
+        }
+
+        function spawnStageEnemies(stage) {
+            enemies.forEach(e => scene.remove(e));
+            enemies = [];
+            if (stage === 1) { for(let i=0;i<5;i++) spawnEnemy('normal'); for(let i=0;i<4;i++) spawnEnemy('predator'); }
+            else if (stage === 2) { for(let i=0;i<4;i++) spawnEnemy('normal'); for(let i=0;i<5;i++) spawnEnemy('archer'); }
+            else if (stage === 3) { for(let i=0;i<4;i++) spawnEnemy('normal'); for(let i=0;i<2;i++) spawnEnemy('archer'); for(let i=0;i<3;i++) spawnEnemy('beast'); spawnEnemy('giant'); }
+            else if (stage === 4) { for(let i=0;i<3;i++) spawnEnemy('normal'); for(let i=0;i<3;i++) spawnEnemy('archer'); for(let i=0;i<4;i++) spawnEnemy('giant'); }
+            else if (stage === 5) { for(let i=0;i<2;i++) spawnEnemy('normal'); for(let i=0;i<4;i++) spawnEnemy('archer'); for(let i=0;i<6;i++) spawnEnemy('giant'); }
+        }
+
+        function spawnCollectible() {
+            const pickup = new THREE.Mesh(new THREE.BoxGeometry(2.1, 2.1, 2.1), new THREE.MeshPhongMaterial({color:0xffcc44, emissive:0xffaa00, shininess:80}));
+            pickup.position.set(player.position.x + 32 + Math.random()*42, 7, player.position.z + (Math.random()-0.5)*42);
+            const r = Math.random();
+            pickup.userData = {type: r < 0.3 ? 'axe' : (r < 0.6 ? 'warSpear' : 'herb')};
+            scene.add(pickup);
+            collectibles.push(pickup);
+        }
+
+        function getTerrainHeight(x, z) {
+            return Math.sin(x/18)*3.5 + Math.cos(z/14)*2.8;
+        }
+
+        function updatePlayer() {
+            let speed = keys['shift'] ? 0.78 : 0.38;
+            if (isMobile && touchJoy.active) speed *= Math.max(Math.hypot(touchJoy.dx, touchJoy.dz), 0.3);
+
+            let vx = 0, vz = 0;
+            if (keys['w'] || keys['arrowup']) vz -= speed;
+            if (keys['s'] || keys['arrowdown']) vz += speed;
+            if (keys['a'] || keys['arrowleft']) vx -= speed;
+            if (keys['d'] || keys['arrowright']) vx += speed;
+            if (isMobile && touchJoy.active) { vx += touchJoy.dx * speed * 1.8; vz += touchJoy.dz * speed * 1.8; }
+
+            let moving = (vx || vz);
+            if (moving) {
+                const moveAngle = Math.atan2(vx, vz);
+                player.rotation.y = moveAngle + yaw;
+                const moveSpeed = Math.hypot(vx, vz) * 1.45;
+                player.position.x += Math.sin(player.rotation.y) * moveSpeed;
+                player.position.z += Math.cos(player.rotation.y) * moveSpeed;
             }
 
-            const markerGroup = new THREE.Group();
-            const pole = new THREE.Mesh(
-                new THREE.CylinderGeometry(0.6, 1, 16, 8),
-                new THREE.MeshPhongMaterial({color: 0xDAA520, emissive: 0xffee88})
-            );
-            pole.position.y = 8;
-            markerGroup.add(pole);
+            // Jump
+            if ((keys[' '] || (isMobile && false)) && !isJumping) {
+                velocityY = 1.15;
+                isJumping = true;
+                playSound('jump');
+            }
+            velocityY -= 0.068;
+            player.position.y += velocityY;
+            const groundY = getTerrainHeight(player.position.x, player.position.z) + 0.2;
+            if (player.position.y <= groundY) { player.position.y = groundY; velocityY = 0; isJumping = false; }
 
-            const top = new THREE.Mesh(
-                new THREE.ConeGeometry(3, 5, 4),
-                new THREE.MeshPhongMaterial({color: 0x8B0000})
-            );
-          
+            // Camera (realistic follow)
+            const camOffset = new THREE.Vector3(0, 15, 29);
+            camOffset.applyAxisAngle(new THREE.Vector3(0,1,0), yaw);
+            camera.position.copy(player.position).add(camOffset);
+            camera.lookAt(player.position.x, player.position.y + 4.5, player.position.z);
+
+            // LEG ANIMATION — separate upper + lower
+            const walkCycle = moving ? Math.sin(Date.now()/90) * 0.9 : 0;
+            if (!isJumping) {
+                player.userData.leftUpperLeg.rotation.x = walkCycle * 0.8;
+                player.userData.leftLowerLeg.rotation.x = Math.abs(walkCycle) * 0.7 - 0.3;
+                player.userData.rightUpperLeg.rotation.x = -walkCycle * 0.8;
+                player.userData.rightLowerLeg.rotation.x = Math.abs(walkCycle) * 0.7 - 0.3;
+            }
+
+            // ARM IDLE SWING
+            const armSwing = moving ? Math.sin(Date.now()/110) * 0.4 : 0;
+            player.userData.leftUpperArm.rotation.z = Math.PI / 3 + armSwing * 0.3;
+            player.userData.rightUpperArm.rotation.z = -Math.PI / 3 - armSwing * 0.3;
+        }
+
+        function doStab() {
+            if (attackCooldown > 0) return;
+            attackCooldown = 16;
+            playSound('stab');
+            // Thrust right arm + lower arm
+            const ua = player.userData.rightUpperArm;
+            const la = player.userData.rightLowerArm;
+            ua.rotation.z = -2.1;
+            la.rotation.x = -1.4;
+            setTimeout(() => {
+                ua.rotation.z = -Math.PI/3;
+                la.rotation.x = 0;
+            }, 160);
+            checkMeleeHit(6, 3.2);
+        }
+
+        function doKick() {
+            if (attackCooldown > 0) return;
+            attackCooldown = 22;
+            playSound('kick');
+            // ONLY RIGHT LEG MOVES — full realistic kick
+            const uLeg = player.userData.rightUpperLeg;
+            const lLeg = player.userData.rightLowerLeg;
+            uLeg.rotation.x = -1.8;
+            lLeg.rotation.x = 1.9;
+            setTimeout(() => {
+                uLeg.rotation.x = 0;
+                lLeg.rotation.x = 0;
+            }, 220);
+            checkMeleeHit(7.5, 2);
+        }
+
+        function throwIklwa() {
+            if (attackCooldown > 0 || !abilitiesUnlocked.throwIklwa) return;
+            attackCooldown = 18;
+            playSound('throw');
+            // Realistic throw animation on right arm
+            const ua = player.userData.rightUpperArm;
+            const la = player.userData.rightLowerArm;
+            ua.rotation.z = -2.4;
+            la.rotation.x = -2.2;
+            setTimeout(() => { ua.rotation.z = -Math.PI/3; la.rotation.x = 0; }, 240);
+
+            const spear = new THREE.Mesh(new THREE.BoxGeometry(0.22, 0.22, 5.2), new THREE.MeshPhongMaterial({color:0xc0c0c0, shininess:90}));
+            spear.position.copy(player.position);
+            spear.position.y += 3.8;
+            spear.rotation.set(0.7, yaw, 0);
+            const vel = new THREE.Vector3(0, 3.2, -58);
+            vel.applyAxisAngle(new THREE.Vector3(0,1,0), yaw);
+            spear.userData = {velocity: vel};
+            scene.add(spear);
+            projectiles.push(spear);
+        }
+
+        function checkMeleeHit(range, damage) {
+            for (let i = enemies.length-1; i >= 0; i--) {
+                const e = enemies[i];
+                const dx = e.position.x - player.position.x;
+                const dz = e.position.z - player.position.z;
+                if (Math.hypot(dx, dz) < range) {
+                    e.userData.health -= damage * player.userData.weaponDamage;
+                    createBlood(e.position.x, e.position.y + 3, e.position.z);
+                    if (e.userData.health <= 0) {
+                        score += e.userData.isGiant ? 240 : 75;
+                        updateScoreUI();
+                        scene.remove(e);
+                        enemies.splice(i,1);
+                        if (Math.random() > 0.65) spawnCollectible();
+                    }
+                    return;
+                }
+            }
+        }
+
+        function createBlood(x, y, z) {
+            playSound('blood');
+            for (let i = 0; i < 12; i++) {
+                const p = new THREE.Mesh(new THREE.SphereGeometry(0.18, 5, 5), new THREE.MeshPhongMaterial({color:0x880000}));
+                p.position.set(x, y, z);
+                p.userData = {
+                    vx: (Math.random()-0.5)*6,
+                    vy: Math.random()*4 + 2,
+                    vz: (Math.random()-0.5)*6,
+                    life: 42 + Math.random()*18
+                };
+                scene.add(p);
+                particles.push(p);
+            }
+        }
+
+        function updateProjectiles() {
+            for (let i = projectiles.length-1; i >= 0; i--) {
+                const p = projectiles[i];
+                p.position.add(p.userData.velocity);
+                p.userData.velocity.y -= 0.42;
+                p.rotation.x += 0.3;
+
+                for (let j = enemies.length-1; j >= 0; j--) {
+                    if (p.position.distanceTo(enemies[j].position) < 4.2) {
+                        enemies[j].userData.health -= 2.4 * player.userData.weaponDamage;
+                        createBlood(enemies[j].position.x, enemies[j].position.y + 3, enemies[j].position.z);
+                        if (enemies[j].userData.health <= 0) {
+                            score += enemies[j].userData.isGiant ? 240 : 75;
+                            updateScoreUI();
+                            scene.remove(enemies[j]);
+                            enemies.splice(j,1);
+                        }
+                        scene.remove(p);
+                        projectiles.splice(i,1);
+                        playSound('hit');
+                        return;
+                    }
+                }
+                if (p.position.y < -10) { scene.remove(p); projectiles.splice(i,1); }
+            }
+        }
+
+        function updateEnemies() {
+            for (let i = enemies.length-1; i >= 0; i--) {
+                const e = enemies[i];
+                const dx = player.position.x - e.position.x;
+                const dz = player.position.z - e.position.z;
+                const dist = Math.hypot(dx, dz);
+
+                if (dist < 3.6) {
+                    if (shieldActive) {
+                        playSound('hit');
+                        const push = 18;
+                        e.position.x -= (dx / dist) * push;
+                        e.position.z -= (dz / dist) * push;
+                    } else {
+                        const dmg = e.userData.isGiant ? 24 : 12;
+                        player.userData.health = Math.max(0, player.userData.health - dmg);
+                        updateHealthUI();
+                        createBlood(player.position.x, player.position.y + 3, player.position.z);
+                        if (player.userData.health <= 0) endGame();
+                        scene.remove(e);
+                        enemies.splice(i,1);
+                        continue;
+                    }
+                }
+
+                // Archer / simple attack animation
+                if (e.userData.isArcher && Math.random() < 0.016) {
+                    const arrow = new THREE.Mesh(new THREE.BoxGeometry(0.16,0.16,3.2), new THREE.MeshPhongMaterial({color:0xaaaaaa}));
+                    arrow.position.copy(e.position); arrow.position.y += 3.4;
+                    const vel = new THREE.Vector3(dx/dist * 29, 4.2, dz/dist * 29);
+                    arrow.userData = {velocity: vel};
+                    scene.add(arrow);
+                    projectiles.push(arrow);
+                }
+                if (e.userData.attackAnim !== undefined) {
+                    if (Math.random() < 0.018 && dist < 12) e.userData.attackAnim = 12;
+                    if (e.userData.attackAnim > 0) {
+                        e.userData.attackAnim--;
+                        e.rotation.y = Math.atan2(dx, dz) + Math.sin(Date.now()/30) * 0.6;
+                    }
+                }
+
+                const dirX = dx / dist;
+                const dirZ = dz / dist;
+                e.position.x += dirX * e.userData.speed;
+                e.position.z += dirZ * e.userData.speed;
+                e.position.y = getTerrainHeight(e.position.x, e.position.z) + 0.2;
+                e.rotation.y = Math.atan2(dx, dz);
+            }
+        }
+
+        function updateCollectibles() {
+            for (let i = collectibles.length-1; i >= 0; i--) {
+                const c = collectibles[i];
+                c.rotation.y += 0.05;
+                c.position.y = 6 + Math.sin(Date.now()/180) * 1.2;
+                if (c.position.distanceTo(player.position) < 6.5) {
+                    const t = c.userData.type;
+                    if (t === 'axe' || t === 'warSpear') {
+                        currentWeapon = t === 'axe' ? "BUFFALO AXE" : "WAR SPEAR";
+                        player.userData.weaponDamage = t === 'axe' ? 2.3 : 1.7;
+                        document.getElementById('weapon-ui').textContent = `WEAPON: ${currentWeapon}`;
+                    } else if (t === 'herb') {
+                        player.userData.health = Math.min(100, player.userData.health + 38);
+                        updateHealthUI();
+                    }
+                    playSound('hit');
+                    scene.remove(c);
+                    collectibles.splice(i,1);
+                }
+            }
+        }
+
+        function updateParticles() {
+            for (let i = particles.length-1; i >= 0; i--) {
+                const p = particles[i];
+                p.position.x += p.userData.vx;
+                p.position.y += p.userData.vy;
+                p.position.z += p.userData.vz;
+                p.userData.vy -= 0.22;
+                p.userData.life--;
+                p.scale.setScalar(p.userData.life / 50);
+                if (p.userData.life <= 0) {
+                    scene.remove(p);
+                    particles.splice(i,1);
+                }
+            }
+        }
+
+        function updateHealthUI() {
+            document.getElementById('health-fill').style.width = Math.max(0, player.userData.health) + '%';
+        }
+        function updateScoreUI() {
+            document.getElementById('score').textContent = String(Math.floor(score)).padStart(5,'0');
+            if (score > highScore) {
+                highScore = score;
+                localStorage.setItem('shaka3DHighScore', highScore);
+                document.getElementById('highscore').textContent = String(Math.floor(highScore)).padStart(5,'0');
+            }
+        }
+        function updateStageUI() { document.getElementById('stage-ui').textContent = `${currentStage}/5`; }
+        function updateObjective(stage) {
+            const texts = ['REACH HILLTOP','REACH VALLEY CENTER','REACH PLAINS CHAMPION AREA','REACH RIVER STRONGHOLD','CONQUER FINAL STRONGHOLD'];
+            const el = document.getElementById('objective-ui');
+            el.textContent = `OBJECTIVE: ${texts[stage-1]}`;
+            el.style.display = 'block';
+        }
+
+        function showStageStory(stage) {
+            const s = stageStories[stage-1];
+            document.getElementById('story-stage').innerHTML = `STAGE ${stage} — ${s.title}`;
+            document.getElementById('story-text').innerHTML = s.text.replace(/\n/g, '<br>');
+            const overlay = document.getElementById('story-overlay');
+            overlay.style.display = 'flex';
+            setTimeout(() => overlay.style.display = 'none', 6800);
+        }
+
+        function showUnlock(msg) {
+            const el = document.getElementById('message');
+            el.innerHTML = msg;
+            el.style.display = 'block';
+            setTimeout(() => el.style.display = 'none', 4800);
+        }
+
+        function advanceStage() {
+            currentStage++;
+            if (currentStage > maxStages) { victoryScreen(); return; }
+            updateStageUI();
+
+            projectiles.forEach(p => scene.remove(p)); projectiles = [];
+            collectibles.forEach(c => scene.remove(c)); collectibles = [];
+
+            createStage(currentStage);
+            showStageStory(currentStage);
+            player.userData.health = Math.min(100, player.userData.health + 32);
+            updateHealthUI();
+            spawnStageEnemies(currentStage);
+            setTimeout(() => spawnCollectible(), 1100);
+
+            if (currentStage === 2) { abilitiesUnlocked.shieldBlock = true; showUnlock("SHIELD BLOCK UNLOCKED!\nPress H"); }
+            if (currentStage === 3) { abilitiesUnlocked.kick = true; showUnlock("KICK UNLOCKED!\nPress K"); }
+            if (currentStage === 4) { abilitiesUnlocked.throwIklwa = true; document.getElementById('btn-throw').style.display = 'flex'; showUnlock("THROW IKLWA UNLOCKED!\nLeft Click / Throw button"); }
+        }
+
+        function drawMinimap() {
+            if (!minimapCtx) return;
+            minimapCtx.clearRect(0,0,160,160);
+            // Ground
+            minimapCtx.fillStyle = '#2e5c2e';
+            minimapCtx.fillRect(0,0,160,160);
+            // Scale factor
+            const scale = 160 / 260;
+            // Goal
+            const gx = (stageGoal.x + 130) * scale;
+            const gz = (stageGoal.z + 130) * scale;
+            minimapCtx.fillStyle = '#ffcc44';
+            minimapCtx.fillRect(gx-4, gz-4, 8, 8);
+            // Player
+            const px = (player.position.x + 130) * scale;
+            const pz = (player.position.z + 130) * scale;
+            minimapCtx.save();
+            minimapCtx.translate(px, pz);
+            minimapCtx.rotate(yaw + Math.PI);
+            minimapCtx.fillStyle = '#ffffff';
+            minimapCtx.fillRect(-3, -8, 6, 16);
+            minimapCtx.restore();
+            // Enemies
+            minimapCtx.fillStyle = '#ff2222';
+            for (let e of enemies) {
+                const ex = (e.position.x + 130) * scale;
+                const ez = (e.position.z + 130) * scale;
+                minimapCtx.fillRect(ex-2, ez-2, 4, 4);
+            }
+        }
+
+        function gameLoop() {
+            if (!gameRunning || paused) { requestAnimationFrame(gameLoop); return; }
+
+            attackCooldown = Math.max(0, attackCooldown-1);
+            if (shieldActive) { shieldTime--; if (shieldTime <= 0) shieldActive = false; }
+
+            updatePlayer();
+            updateEnemies();
+            updateProjectiles();
+            updateCollectibles();
+            updateParticles();
+
+            if (enemies.length === 0) {
+                const dx = player.position.x - stageGoal.x;
+                const dz = player.position.z - stageGoal.z;
+                if (Math.hypot(dx, dz) < 24) advanceStage();
+            }
+
+            renderer.render(scene, camera);
+            if (Math.random() < 0.2) drawMinimap(); // every few frames
+            requestAnimationFrame(gameLoop);
+        }
+
+        function startGame() {
+            document.getElementById('start-screen').classList.remove('active');
+            if (!scene) initThree();
+
+            score = 0; currentStage = 1; enemies = []; projectiles = []; collectibles = []; particles = [];
+            player.position.set(0, 5, 0);
+            player.userData.health = 100;
+            player.userData.weaponDamage = 1;
+            currentWeapon = "IKLWA";
+            yaw = 0;
+            abilitiesUnlocked = {stab:true, kick:false, shieldBlock:false, throwIklwa:false};
+
+            updateScoreUI(); updateHealthUI(); updateStageUI();
+
+            createStage(1);
+            showStageStory(1);
+            spawnStageEnemies(1);
+
+            gameRunning = true; paused = false;
+            if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            if (isMobile) document.getElementById('mobile-controls').style.display = 'flex';
+            document.getElementById('minimap').style.display = 'block';
+            gameLoop();
+        }
+
+        function endGame() { gameRunning = false; document.getElementById('game-over-screen').classList.add('active'); }
+        function victoryScreen() { gameRunning = false; document.getElementById('victory-score').innerHTML = `FINAL SCORE<br><span style="font-size:48px">${Math.floor(score)}</span>`; document.getElementById('victory-screen').classList.add('active'); }
+        function restartGame() {
+            document.getElementById('game-over-screen').classList.remove('active');
+            document.getElementById('victory-screen').classList.remove('active');
+            startGame();
+        }
+        function togglePause() {
+            if (!gameRunning) return;
+            paused = !paused;
+            document.getElementById('pause-screen').classList.toggle('active', paused);
+        }
+        function quitToMenu() {
+            paused = false; gameRunning = false;
+            document.getElementById('pause-screen').classList.remove('active');
+            document.getElementById('start-screen').classList.add('active');
+            document.getElementById('mobile-controls').style.display = 'none';
+            document.getElementById('minimap').style.display = 'none';
+        }
+
+        // MOBILE TOUCH CONTROLS
+        function setupMobile() {
+            isMobile = /Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+            if (!isMobile) return;
+
+            const joy = document.getElementById('joystick');
+            const knob = document.getElementById('joystick-knob');
+
+            joy.addEventListener('touchstart', e => {
+                touchJoy.active = true;
+                touchJoy.startX = e.touches[0].clientX;
+                touchJoy.startY = e.touches[0].clientY;
+            });
+            joy.addEventListener('touchmove', e => {
+                if (!touchJoy.active) return;
+                const dx = e.touches[0].clientX - touchJoy.startX;
+                const dy = e.touches[0].clientY - touchJoy.startY;
+                const dist = Math.min(42, Math.hypot(dx, dy));
+                const angle = Math.atan2(dx, dy);
+                touchJoy.dx = Math.sin(angle) * (dist / 42);
+                touchJoy.dz = Math.cos(angle) * (dist / 42);
+                knob.style.transform = `translate(${touchJoy.dx * 42}px, ${touchJoy.dz * 42}px)`;
+            });
+            joy.addEventListener('touchend', () => {
+                touchJoy.active = false;
+                touchJoy.dx = touchJoy.dz = 0;
+                knob.style.transform = 'translate(-50%, -50%)';
+            });
+
+            // Screen drag for look
+            const canvasEl = document.getElementById('canvas');
+            canvasEl.addEventListener('touchstart', e => { lastTouchX = e.touches[0].clientX; lastTouchY = e.touches[0].clientY; });
+            canvasEl.addEventListener('touchmove', e => {
+                if (!gameRunning) return;
+                const dx = e.touches[0].clientX - lastTouchX;
+                const dy = e.touches[0].clientY - lastTouchY;
+                yaw -= dx * 0.0045;
+                pitch = Math.max(-1.1, Math.min(1.1, pitch - dy * 0.003));
+                lastTouchX = e.touches[0].clientX;
+                lastTouchY = e.touches[0].clientY;
+            });
+        }
+
+        window.mobileAction = function(action) {
+            if (!gameRunning) return;
+            if (action === 'stab') doStab();
+            if (action === 'kick' && abilitiesUnlocked.kick) doKick();
+            if (action === 'shield' && abilitiesUnlocked.shieldBlock) { shieldActive = true; shieldTime = 150; playSound('hit'); }
+            if (action === 'throw' && abilitiesUnlocked.throwIklwa) throwIklwa();
+        };
+
+        window.addEventListener('keydown', e => {
+            keys[e.key.toLowerCase()] = true;
+            if (e.key === 'Escape' && gameRunning) togglePause();
+            if (e.key.toLowerCase() === 's' && abilitiesUnlocked.stab) doStab();
+            if (e.key.toLowerCase() === 'k' && abilitiesUnlocked.kick) doKick();
+            if (e.key === 'h' && abilitiesUnlocked.shieldBlock) { shieldActive = true; shieldTime = 150; playSound('hit'); }
+        });
+        window.addEventListener('keyup', e => keys[e.key.toLowerCase()] = false);
+
+        let pointerLocked = false;
+        const canvasEl = document.getElementById('canvas');
+        canvasEl.addEventListener('click', () => {
+            if (!gameRunning) return;
+            if (!isMobile && !pointerLocked) canvasEl.requestPointerLock();
+            else if (abilitiesUnlocked.throwIklwa) throwIklwa();
+        });
+
+        document.addEventListener('pointerlockchange', () => pointerLocked = document.pointerLockElement !== null);
+        document.addEventListener('mousemove', e => {
+            if (pointerLocked && gameRunning && !isMobile) {
+                yaw -= e.movementX * 0.0032;
+                pitch = Math.max(-1.2, Math.min(1.2, pitch - e.movementY * 0.0022));
+            }
+        });
+
+        function init() {
+            document.getElementById('highscore').textContent = String(highScore).padStart(5,'0');
+            minimapCtx = document.getElementById('minimap').getContext('2d');
+            setupMobile();
+            console.log('%c✅ FULL QUALITY SHAKA ZULU IKLWA EMPIRE READY — Realistic separate limb animation • Blood particles • Rich sound FX • Mini-map • PC + Mobile touch controls', 'color:#DAA520;font-size:15px');
+        }
+        window.onload = init;
+    </script>
+</body>
+</html>
+```
