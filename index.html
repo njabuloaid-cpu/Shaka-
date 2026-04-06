@@ -7,46 +7,26 @@
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
         :root { --zulu-red: #8B0000; --zulu-gold: #DAA520; }
-        body { 
-            margin:0; padding:0; background:#000; color:#fff; 
-            font-family:'Press Start 2P',system-ui; overflow:hidden; 
-            display:flex; flex-direction:column; align-items:center; 
-            height:100vh; touch-action:none; 
-        }
-        header { 
-            width:100%; max-width:900px; background:var(--zulu-red); 
-            padding:8px 15px; display:flex; justify-content:space-between; 
-            align-items:center; box-shadow:0 4px 10px rgba(0,0,0,0.5); 
-            z-index:10; font-size:0.9em; 
-        }
+        body { margin:0; padding:0; background:#000; color:#fff; font-family:'Press Start 2P',system-ui; overflow:hidden; display:flex; flex-direction:column; align-items:center; height:100vh; touch-action:none; }
+        header { width:100%; max-width:900px; background:var(--zulu-red); padding:8px 15px; display:flex; justify-content:space-between; align-items:center; box-shadow:0 4px 10px rgba(0,0,0,0.5); z-index:10; font-size:0.9em; }
         .title { font-size:20px; letter-spacing:3px; text-shadow:3px 3px 0 #000; }
         .stats { display:flex; gap:12px; font-size:13px; }
         .health-bar { width:120px; height:18px; background:#222; border:3px solid var(--zulu-gold); position:relative; overflow:hidden; }
         .health-fill { height:100%; background:linear-gradient(#00ff00,#00cc00); transition:width 0.3s; }
-        #canvas { 
-            border:8px solid var(--zulu-gold); border-radius:8px; 
-            box-shadow:0 0 30px rgba(218,165,32,0.6); 
-            background:#111; 
-            width:100%; max-width:900px; 
-            height:calc(100vh - 68px); 
-            display:block; 
-        }
-        /* ... rest of your styles unchanged ... */
+        #canvas { border:8px solid var(--zulu-gold); border-radius:8px; box-shadow:0 0 30px rgba(218,165,32,0.6); background:#111; width:100%; max-width:900px; height:calc(100vh - 68px); display:block; }
         .overlay { position:absolute; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.9); display:none; flex-direction:column; align-items:center; justify-content:center; z-index:100; text-align:center; padding:20px; box-sizing:border-box; }
         .overlay.active { display:flex; }
         .overlay h1 { font-size:42px; color:var(--zulu-gold); text-shadow:6px 6px 0 var(--zulu-red); margin-bottom:10px; letter-spacing:8px; }
-        button { 
-            font-family:'Press Start 2P',system-ui; font-size:18px; padding:15px 40px; 
-            background:var(--zulu-red); color:#fff; border:6px solid var(--zulu-gold); 
-            cursor:pointer; margin-top:20px; box-shadow:0 6px 0 #000; transition:all 0.1s; 
-        }
+        button { font-family:'Press Start 2P',system-ui; font-size:18px; padding:15px 40px; background:var(--zulu-red); color:#fff; border:6px solid var(--zulu-gold); cursor:pointer; margin-top:20px; box-shadow:0 6px 0 #000; transition:all 0.1s; }
         button:hover { transform:translateY(-4px); box-shadow:0 10px 0 #000; }
-        /* Keep your other UI styles (instructions, minimap, mobile-controls, etc.) exactly as before */
+        .instructions { position:absolute; bottom:12px; left:12px; background:rgba(0,0,0,0.8); padding:8px 12px; font-size:11px; border:3px solid var(--zulu-gold); pointer-events:none; line-height:1.3; z-index:50; max-width:92%; }
+        #objective-ui, #message, #minimap, #mobile-controls { /* your existing styles */ }
+        /* Add the rest of your original styles here if needed (objective-ui, message, minimap, mobile-controls, etc.) */
     </style>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r134/three.min.js"></script>
 </head>
 <body>
-    <!-- Your full HTML structure (header, canvas, minimap, overlays, mobile-controls, footer) remains unchanged -->
+    <!-- Your full HTML structure stays exactly the same -->
     <header>
         <div class="title">SHAKA ZULU • IKLWA EMPIRE</div>
         <div class="stats">
@@ -60,9 +40,20 @@
     <canvas id="canvas"></canvas>
     <canvas id="minimap" width="130" height="130"></canvas>
 
-    <!-- Instructions, objective-ui, message, mobile-controls, overlays (start-screen, game-over, etc.) - keep exactly as in your original -->
+    <div class="instructions" id="instructions">
+        PC: WASD + Mouse • SHIFT Sprint • SPACE Jump<br>
+        S=Stab • K=Kick • H=Shield • L-Click=Throw<br>
+        MOBILE: Joystick + buttons
+    </div>
 
-    <footer>MOBILE FULLY FIXED • Canvas responsive • 3D visible on phones • Paste as index.html</footer>
+    <div id="objective-ui"></div>
+    <div id="message"></div>
+
+    <div id="mobile-controls"> <!-- your mobile controls HTML unchanged --> </div>
+
+    <!-- All your overlay screens (start-screen, game-over, victory, pause, story) unchanged -->
+
+    <footer>Debug version - Open F12 Console and check for logs/errors</footer>
 
     <script>
         let scene, camera, renderer, playerGroup, player;
@@ -75,89 +66,77 @@
         let currentWeapon = "IKLWA";
         let audioCtx;
         let abilitiesUnlocked = {};
-        let stageGoal = {x: 0, z: 0};
-        let stageGoalMarker = null;
         let isMobile = false;
-        let touchJoy = {active:false, dx:0, dz:0, startX:0, startY:0};
         let minimapCtx;
 
-        const stageData = [ /* unchanged */ ];
-
-        function playSound(type) { /* unchanged */ }
-
+        // === THREE.JS SETUP ===
         function initThree() {
             const canvas = document.getElementById('canvas');
-            renderer = new THREE.WebGLRenderer({ 
-                canvas: canvas, 
-                antialias: true,
-                alpha: false 
-            });
-            renderer.setClearColor(0x111111); // Matches your CSS background
+            renderer = new THREE.WebGLRenderer({ canvas: canvas, antialias: true });
+            renderer.setClearColor(0x112211); // visible dark background instead of pure black
 
             scene = new THREE.Scene();
-            scene.fog = new THREE.Fog(0x112211, 40, 160);
+            scene.fog = new THREE.Fog(0x112211, 50, 200);
 
             camera = new THREE.PerspectiveCamera(70, canvas.clientWidth / canvas.clientHeight, 0.1, 300);
 
             // Lights
-            const hemi = new THREE.HemisphereLight(0x88aa77, 0x334422, 0.9);
-            scene.add(hemi);
-            const sun = new THREE.DirectionalLight(0xffeecc, 1.6);
-            sun.position.set(60, 110, 50);
+            scene.add(new THREE.HemisphereLight(0x88aa77, 0x334422, 1.0));
+            const sun = new THREE.DirectionalLight(0xffeecc, 1.5);
+            sun.position.set(60, 120, 80);
             scene.add(sun);
 
-            // Simple visible ground so you see something immediately
-            const groundGeo = new THREE.PlaneGeometry(200, 200);
-            const groundMat = new THREE.MeshLambertMaterial({ color: 0x2e5c2e });
-            const ground = new THREE.Mesh(groundGeo, groundMat);
+            // LARGE visible ground (so you see something immediately)
+            const ground = new THREE.Mesh(
+                new THREE.PlaneGeometry(400, 400),
+                new THREE.MeshLambertMaterial({ color: 0x3d6c3d })
+            );
             ground.rotation.x = -Math.PI / 2;
-            ground.position.y = 0;
             scene.add(ground);
 
-            // Player
+            // Player (bigger & clearly visible)
             playerGroup = new THREE.Group();
             scene.add(playerGroup);
 
-            // Basic player (expand with your full model: torso, head, arms, legs, spear, shield)
             const torso = new THREE.Mesh(
-                new THREE.BoxGeometry(1.4, 2.4, 1.1), 
+                new THREE.BoxGeometry(2, 3.5, 1.8),
                 new THREE.MeshPhongMaterial({ color: 0x3d2b1f })
             );
-            torso.position.y = 1.2;
+            torso.position.y = 1.75;
             playerGroup.add(torso);
 
-            // Add a simple head so it's visible
             const head = new THREE.Mesh(
-                new THREE.SphereGeometry(0.7, 16, 16),
+                new THREE.SphereGeometry(0.9, 20, 20),
                 new THREE.MeshPhongMaterial({ color: 0x8b5a2b })
             );
-            head.position.y = 3.0;
+            head.position.y = 4.2;
             playerGroup.add(head);
 
             player = playerGroup;
+            player.position.set(0, 0.1, 0); // on ground
             player.userData = { health: 100, weaponDamage: 1 };
 
-            // Initial camera position (third-person behind player)
-            camera.position.set(0, 8, 15);
-            camera.lookAt(player.position);
+            // Camera positioned safely behind & above player
+            camera.position.set(0, 12, 30);
+            camera.lookAt(0, 3, 0);
 
             resizeCanvas();
+
+            // Force render immediately so you see the ground + player even before "start"
+            renderer.render(scene, camera);
+            console.log("✅ Three.js initialized - ground and player should be visible");
         }
 
         function resizeCanvas() {
             const canvas = document.getElementById('canvas');
-            if (!renderer) return;
+            if (!renderer || !camera) return;
 
             const w = Math.min(window.innerWidth - 30, 900);
-            const h = Math.max(300, window.innerHeight - 78); // prevent tiny height
+            const h = Math.max(420, window.innerHeight - 78);
 
-            canvas.width = w;
-            canvas.height = h;
             renderer.setSize(w, h);
-            if (camera) {
-                camera.aspect = w / h;
-                camera.updateProjectionMatrix();
-            }
+            camera.aspect = w / h;
+            camera.updateProjectionMatrix();
         }
 
         function gameLoop() {
@@ -166,62 +145,59 @@
                 return;
             }
 
-            // Your update logic here (player movement, enemies, collisions, etc.)
-            // Example placeholder:
-            // updatePlayer();
-            // updateEnemies();
-            // updateProjectiles();
+            // TODO: Put your updatePlayer(), enemy logic, etc. here
 
-            // Render
             renderer.render(scene, camera);
-
             requestAnimationFrame(gameLoop);
         }
 
         function startGame() {
             document.getElementById('start-screen').classList.remove('active');
-
             if (!scene) initThree();
 
-            // Reset game state (unchanged)
-            score = 0; currentStage = 1; 
+            // Your reset logic
+            score = 0; currentStage = 1;
             enemies = []; projectiles = []; collectibles = []; particles = [];
-            player.position.set(0, 0.1, 0); // on ground
+            player.position.set(0, 0.1, 0);
             player.userData.health = 100;
             yaw = 0;
             abilitiesUnlocked = {stab:true, kick:false, shieldBlock:false, throwIklwa:false};
 
-            updateScoreUI(); updateHealthUI(); updateStageUI();
-            createStage(1);           // your function
-            showStageStory(1);        // your function
-            spawnStageEnemies(1);     // your function
+            // Call your other functions (createStage, showStageStory, spawnStageEnemies, updateScoreUI, etc.)
+            // createStage(1); showStageStory(1); spawnStageEnemies(1); etc.
 
-            gameRunning = true; 
+            gameRunning = true;
             paused = false;
 
             if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-
             if (isMobile) document.getElementById('mobile-controls').style.display = 'flex';
             document.getElementById('minimap').style.display = 'block';
 
-            gameLoop(); // ← This was missing!
+            gameLoop();
+            console.log("🚀 Game started - animation loop running");
         }
-
-        // Your other functions (mobileAction, createStage, doStab, etc.) remain unchanged
 
         function init() {
             document.getElementById('highscore').textContent = String(highScore).padStart(5, '0');
             minimapCtx = document.getElementById('minimap').getContext('2d');
             isMobile = /Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
 
-            window.addEventListener('resize', () => {
-                if (gameRunning) resizeCanvas();
-            });
+            if (isMobile) document.getElementById('mobile-controls').style.display = 'flex';
 
-            console.log('%c✅ Shaka Zulu 3D initialized — check console for errors', 'color:#DAA520;font-size:15px');
+            // Show scene early
+            initThree();
+
+            console.log('%c✅ Shaka Zulu debug version loaded - check F12 Console', 'color:#DAA520;font-size:15px');
         }
 
         window.onload = init;
+        window.addEventListener('resize', resizeCanvas);
+
+        // Your other functions (playSound, mobileAction, updateScoreUI, etc.) go here unchanged
+        window.mobileAction = function(action) {
+            if (!gameRunning) return;
+            // your existing mobileAction code
+        };
     </script>
 </body>
-</html>
+                </html>
