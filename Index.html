@@ -1,0 +1,898 @@
+```html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Shaka Zulu: Iklwa Empire</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
+        
+        :root {
+            --zulu-red: #8B0000;
+            --zulu-gold: #DAA520;
+            --zulu-green: #006400;
+        }
+        
+        body {
+            margin: 0;
+            padding: 0;
+            background: linear-gradient(#0f2a0f, #1a3d1a);
+            color: #fff;
+            font-family: 'Press Start 2P', system-ui;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            height: 100vh;
+            image-rendering: pixelated;
+        }
+        
+        header {
+            width: 100%;
+            max-width: 800px;
+            background: var(--zulu-red);
+            padding: 10px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5);
+            z-index: 10;
+        }
+        
+        .title {
+            font-size: 24px;
+            letter-spacing: 4px;
+            text-shadow: 3px 3px 0 #000;
+        }
+        
+        .stats {
+            display: flex;
+            gap: 20px;
+            font-size: 14px;
+        }
+        
+        .stat {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .health-bar {
+            width: 150px;
+            height: 20px;
+            background: #222;
+            border: 3px solid var(--zulu-gold);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .health-fill {
+            height: 100%;
+            background: linear-gradient(#00ff00, #00cc00);
+            transition: width 0.3s;
+        }
+        
+        canvas {
+            border: 8px solid var(--zulu-gold);
+            border-radius: 8px;
+            box-shadow: 0 0 30px rgba(218, 165, 32, 0.6);
+            background: #000;
+            image-rendering: pixelated;
+        }
+        
+        .overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.85);
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 100;
+            text-align: center;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+        
+        .overlay.active {
+            display: flex;
+        }
+        
+        .overlay h1 {
+            font-size: 48px;
+            color: var(--zulu-gold);
+            text-shadow: 6px 6px 0 var(--zulu-red);
+            margin-bottom: 10px;
+            letter-spacing: 8px;
+        }
+        
+        .overlay p {
+            font-size: 18px;
+            max-width: 600px;
+            line-height: 1.5;
+            margin: 20px 0;
+        }
+        
+        button {
+            font-family: 'Press Start 2P', system-ui;
+            font-size: 20px;
+            padding: 15px 40px;
+            background: var(--zulu-red);
+            color: #fff;
+            border: 6px solid var(--zulu-gold);
+            cursor: pointer;
+            margin-top: 20px;
+            box-shadow: 0 6px 0 #000;
+            transition: all 0.1s;
+        }
+        
+        button:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 10px 0 #000;
+        }
+        
+        button:active {
+            transform: translateY(2px);
+            box-shadow: 0 2px 0 #000;
+        }
+        
+        .fact {
+            font-size: 14px;
+            max-width: 500px;
+            background: rgba(255,255,255,0.1);
+            padding: 15px;
+            border-left: 6px solid var(--zulu-gold);
+            margin-top: 30px;
+        }
+        
+        footer {
+            width: 100%;
+            max-width: 800px;
+            padding: 10px;
+            text-align: center;
+            font-size: 12px;
+            opacity: 0.7;
+        }
+        
+        .controls {
+            display: flex;
+            gap: 15px;
+            font-size: 13px;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="title">SHAKA ZULU</div>
+        <div class="stats">
+            <div class="stat">
+                <span>SCORE</span>
+                <span id="score" style="color: var(--zulu-gold); font-size: 22px;">00000</span>
+            </div>
+            <div class="stat">
+                <span>EMPIRE</span>
+                <div class="health-bar">
+                    <div id="health-fill" class="health-fill" style="width: 100%"></div>
+                </div>
+            </div>
+            <div class="stat">
+                <span>HIGH</span>
+                <span id="highscore" style="color: var(--zulu-gold); font-size: 22px;">00000</span>
+            </div>
+        </div>
+    </header>
+
+    <canvas id="canvas" width="800" height="500"></canvas>
+
+    <!-- Start Screen -->
+    <div id="start-screen" class="overlay active">
+        <h1>SHAKA ZULU</h1>
+        <h2>IKLWA EMPIRE</h2>
+        <p>Lead the greatest warrior king in history.<br>Master the buffalo horns. Conquer with the iklwa.</p>
+        
+        <button onclick="startGame()">BEGIN THE CONQUEST</button>
+        
+        <div class="fact">
+            <strong>HISTORY FACT:</strong> Shaka revolutionized warfare with the short stabbing spear (iklwa) and the "buffalo horns" formation — chest pins the enemy, horns encircle, loins reinforce.
+        </div>
+        
+        <div class="controls">
+            <div>🖱️ MOUSE MOVE = Position Shaka</div>
+            <div>🖱️ CLICK = Throw iklwa spear</div>
+            <div>ESC = Pause</div>
+        </div>
+    </div>
+
+    <!-- Game Over Screen -->
+    <div id="game-over-screen" class="overlay">
+        <h1>GAME OVER</h1>
+        <p id="final-score-text" style="font-size: 24px; color: var(--zulu-gold);"></p>
+        <p>The Zulu Empire falls... but legends never die.</p>
+        
+        <button onclick="restartGame()">REBUILD THE EMPIRE</button>
+        
+        <div id="game-over-fact" class="fact"></div>
+    </div>
+
+    <!-- Pause Screen -->
+    <div id="pause-screen" class="overlay" style="background: rgba(0,0,0,0.95);">
+        <h1>PAUSED</h1>
+        <p>Shaka rests his spear...</p>
+        <button onclick="togglePause()">RESUME CONQUEST</button>
+        <button onclick="quitToMenu()" style="margin-top: 10px; background: #444;">RETURN TO KRAAL</button>
+    </div>
+
+    <footer>
+        A fully playable single-file HTML game by Grok • Historical theme based on real Zulu military innovations (1787–1828) • Paste this entire file as index.html on GitHub for instant GitHub Pages
+    </footer>
+
+    <script>
+        // Canvas setup
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+        
+        // Game variables
+        let player = {
+            x: 120,
+            y: 250,
+            width: 60,
+            height: 90,
+            health: 100,
+            maxHealth: 100
+        };
+        
+        let projectiles = [];
+        let enemies = [];
+        let particles = [];
+        let score = 0;
+        let highScore = localStorage.getItem('shakaHighScore') || 0;
+        let gameRunning = false;
+        let paused = false;
+        let lastSpawn = 0;
+        let spawnRate = 1200; // ms between spawns
+        let difficulty = 1;
+        let gameTime = 0;
+        
+        // Mouse position for player control
+        let mouseY = 250;
+        
+        // Audio context for simple sounds (no external files)
+        let audioCtx;
+        
+        // Historical facts for game over / start
+        const facts = [
+            "Shaka invented the iklwa — a short stabbing spear that changed African warfare forever.",
+            "The buffalo horns formation: 'chest' pinned enemies while 'horns' encircled them.",
+            "Shaka created age-based regiments (amabutho) — the first professional standing army in southern Africa.",
+            "At the Battle of Gqokli Hill, Shaka defeated Zwide's Ndwandwe forces using revolutionary tactics.",
+            "Shaka's impis could march 50 miles a day and live off the land.",
+            "The Zulu Empire grew from a small clan to dominate southern Africa in just 12 years."
+        ];
+        
+        // Helper to play simple sound
+        function playSound(type) {
+            if (!audioCtx) return;
+            const oscillator = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            
+            oscillator.connect(gain);
+            gain.connect(audioCtx.destination);
+            
+            if (type === 'throw') {
+                oscillator.frequency.setValueAtTime(180, audioCtx.currentTime);
+                gain.gain.value = 0.3;
+                oscillator.type = 'sawtooth';
+                oscillator.start();
+                setTimeout(() => oscillator.stop(), 80);
+            } else if (type === 'hit') {
+                oscillator.frequency.setValueAtTime(400, audioCtx.currentTime);
+                gain.gain.value = 0.6;
+                oscillator.type = 'square';
+                oscillator.start();
+                setTimeout(() => {
+                    oscillator.frequency.setValueAtTime(200, audioCtx.currentTime + 0.05);
+                    setTimeout(() => oscillator.stop(), 120);
+                }, 30);
+            } else if (type === 'enemyHit') {
+                oscillator.frequency.setValueAtTime(120, audioCtx.currentTime);
+                gain.gain.value = 0.4;
+                oscillator.type = 'sine';
+                oscillator.start();
+                setTimeout(() => oscillator.stop(), 150);
+            }
+        }
+        
+        // Draw background (African savanna + Zulu hills)
+        function drawBackground() {
+            // Sky
+            const skyGradient = ctx.createLinearGradient(0, 0, 0, 300);
+            skyGradient.addColorStop(0, '#5c8a5c');
+            skyGradient.addColorStop(1, '#2e5c2e');
+            ctx.fillStyle = skyGradient;
+            ctx.fillRect(0, 0, canvas.width, 350);
+            
+            // Sun
+            ctx.fillStyle = '#ffcc44';
+            ctx.beginPath();
+            ctx.arc(650, 80, 35, 0, Math.PI * 2);
+            ctx.fill();
+            
+            // Hills
+            ctx.fillStyle = '#1e3d1e';
+            ctx.beginPath();
+            ctx.moveTo(0, 350);
+            ctx.quadraticCurveTo(200, 220, 400, 350);
+            ctx.quadraticCurveTo(600, 180, 800, 350);
+            ctx.fill();
+            
+            // Grass ground
+            ctx.fillStyle = '#0f2a0f';
+            ctx.fillRect(0, 350, canvas.width, canvas.height - 350);
+            
+            // Grass details
+            ctx.strokeStyle = '#1a3d1a';
+            ctx.lineWidth = 3;
+            for (let i = 0; i < 60; i++) {
+                const x = Math.random() * canvas.width;
+                const y = 350 + Math.random() * (canvas.height - 350);
+                ctx.beginPath();
+                ctx.moveTo(x, y);
+                ctx.lineTo(x + (Math.random() * 12 - 6), y - 25);
+                ctx.stroke();
+            }
+            
+            // Simple Zulu kraal fence on left
+            ctx.fillStyle = '#8B4513';
+            ctx.fillRect(20, 380, 80, 10);
+            for (let i = 0; i < 8; i++) {
+                ctx.fillRect(25 + i * 10, 340, 6, 50);
+            }
+            
+            // Title on background when playing
+            if (gameRunning) {
+                ctx.save();
+                ctx.font = 'bold 22px "Press Start 2P"';
+                ctx.fillStyle = 'rgba(218, 165, 32, 0.3)';
+                ctx.textAlign = 'left';
+                ctx.fillText('IMPI', 30, 80);
+                ctx.restore();
+            }
+        }
+        
+        // Draw player (Shaka Zulu)
+        function drawPlayer() {
+            // Shadow
+            ctx.fillStyle = 'rgba(0,0,0,0.3)';
+            ctx.beginPath();
+            ctx.ellipse(player.x + 15, player.y + player.height + 8, 35, 12, 0, 0, Math.PI * 2);
+            ctx.fill();
+            
+            // Shield (cowhide style)
+            ctx.fillStyle = '#d2a679';
+            ctx.strokeStyle = '#3d2b1f';
+            ctx.lineWidth = 8;
+            ctx.beginPath();
+            ctx.ellipse(player.x + 8, player.y + 35, 22, 38, Math.PI / 6, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.stroke();
+            
+            // Shield pattern (Zulu style)
+            ctx.fillStyle = '#8B0000';
+            ctx.fillRect(player.x - 8, player.y + 18, 12, 35);
+            
+            // Body
+            ctx.fillStyle = '#3d2b1f';
+            ctx.fillRect(player.x + 22, player.y + 25, 28, 45);
+            
+            // Arms
+            ctx.strokeStyle = '#3d2b1f';
+            ctx.lineWidth = 12;
+            ctx.beginPath();
+            ctx.moveTo(player.x + 30, player.y + 35);
+            ctx.quadraticCurveTo(player.x + 55, player.y + 45, player.x + 65, player.y + 28); // spear arm
+            ctx.stroke();
+            
+            // Legs
+            ctx.lineWidth = 10;
+            ctx.beginPath();
+            ctx.moveTo(player.x + 30, player.y + 68);
+            ctx.lineTo(player.x + 22, player.y + 88);
+            ctx.moveTo(player.x + 42, player.y + 68);
+            ctx.lineTo(player.x + 48, player.y + 88);
+            ctx.stroke();
+            
+            // Head
+            ctx.fillStyle = '#d2a679';
+            ctx.beginPath();
+            ctx.arc(player.x + 38, player.y + 22, 14, 0, Math.PI * 2);
+            ctx.fill();
+            
+            // Headband / feathers
+            ctx.fillStyle = '#8B0000';
+            ctx.fillRect(player.x + 28, player.y + 8, 22, 8);
+            // Feather
+            ctx.strokeStyle = '#fff';
+            ctx.lineWidth = 4;
+            ctx.beginPath();
+            ctx.moveTo(player.x + 45, player.y + 8);
+            ctx.quadraticCurveTo(player.x + 55, player.y - 12, player.x + 62, player.y - 25);
+            ctx.stroke();
+            
+            // Eyes
+            ctx.fillStyle = '#000';
+            ctx.fillRect(player.x + 44, player.y + 18, 4, 4);
+            
+            // Iklwa spear (the legendary short stabbing spear)
+            ctx.strokeStyle = '#3d2b1f';
+            ctx.lineWidth = 6;
+            ctx.beginPath();
+            ctx.moveTo(player.x + 65, player.y + 28);
+            ctx.lineTo(player.x + 110, player.y + 12);
+            ctx.stroke();
+            
+            // Spear blade
+            ctx.fillStyle = '#c0c0c0';
+            ctx.beginPath();
+            ctx.moveTo(player.x + 110, player.y + 12);
+            ctx.lineTo(player.x + 125, player.y + 5);
+            ctx.lineTo(player.x + 110, player.y + 20);
+            ctx.fill();
+        }
+        
+        // Draw enemy (Ndwandwe / rival warrior)
+        function drawEnemy(enemy) {
+            const x = enemy.x;
+            const y = enemy.y;
+            
+            // Shadow
+            ctx.fillStyle = 'rgba(0,0,0,0.3)';
+            ctx.beginPath();
+            ctx.ellipse(x + 20, y + enemy.height + 8, 28, 10, 0, 0, Math.PI * 2);
+            ctx.fill();
+            
+            // Body
+            ctx.fillStyle = '#4a2a1a';
+            ctx.fillRect(x + 10, y + 25, 30, 42);
+            
+            // Head
+            ctx.fillStyle = '#d2a679';
+            ctx.beginPath();
+            ctx.arc(x + 25, y + 22, 13, 0, Math.PI * 2);
+            ctx.fill();
+            
+            // Simple spear
+            ctx.strokeStyle = '#3d2b1f';
+            ctx.lineWidth = 5;
+            ctx.beginPath();
+            ctx.moveTo(x + 35, y + 35);
+            ctx.lineTo(x + 55, y + 48);
+            ctx.stroke();
+            
+            // Shield (smaller, enemy style)
+            ctx.fillStyle = '#8b5a2b';
+            ctx.beginPath();
+            ctx.ellipse(x + 8, y + 38, 18, 30, -Math.PI / 4, 0, Math.PI * 2);
+            ctx.fill();
+            
+            // Blood if damaged (but enemies are one-hit)
+            if (enemy.hit) {
+                ctx.fillStyle = 'rgba(139, 0, 0, 0.7)';
+                ctx.fillRect(x + 15, y + 30, 25, 12);
+            }
+        }
+        
+        // Draw projectile (flying iklwa)
+        function drawProjectile(p) {
+            ctx.save();
+            ctx.translate(p.x, p.y);
+            ctx.rotate(Math.atan2(p.vy, p.vx));
+            
+            // Shaft
+            ctx.strokeStyle = '#3d2b1f';
+            ctx.lineWidth = 5;
+            ctx.beginPath();
+            ctx.moveTo(0, 0);
+            ctx.lineTo(28, 0);
+            ctx.stroke();
+            
+            // Blade
+            ctx.fillStyle = '#c0c0c0';
+            ctx.beginPath();
+            ctx.moveTo(28, 0);
+            ctx.lineTo(38, -8);
+            ctx.lineTo(38, 8);
+            ctx.fill();
+            
+            ctx.restore();
+        }
+        
+        // Draw particles (blood / dust)
+        function drawParticles() {
+            for (let i = particles.length - 1; i >= 0; i--) {
+                const p = particles[i];
+                ctx.fillStyle = p.color;
+                ctx.globalAlpha = p.life;
+                ctx.fillRect(p.x, p.y, p.size, p.size);
+                ctx.globalAlpha = 1;
+                
+                p.x += p.vx;
+                p.y += p.vy;
+                p.life -= 0.03;
+                p.vx *= 0.98;
+                p.vy *= 0.98;
+                
+                if (p.life <= 0) particles.splice(i, 1);
+            }
+        }
+        
+        // Spawn enemy
+        function spawnEnemy() {
+            const types = ['fast', 'strong', 'normal'];
+            const type = types[Math.floor(Math.random() * types.length)];
+            
+            let enemy = {
+                x: canvas.width + 50,
+                y: 180 + Math.random() * 170,
+                width: 55,
+                height: 85,
+                speed: type === 'fast' ? 2.8 : (type === 'strong' ? 1.4 : 2.1),
+                health: type === 'strong' ? 2 : 1,
+                type: type,
+                hit: false
+            };
+            
+            // Increase difficulty over time
+            if (difficulty > 1) {
+                enemy.speed += (difficulty - 1) * 0.4;
+            }
+            
+            enemies.push(enemy);
+        }
+        
+        // Collision detection
+        function checkCollision(a, b) {
+            return !(
+                a.x + a.width < b.x ||
+                b.x + b.width < a.x ||
+                a.y + a.height < b.y ||
+                b.y + b.height < a.y
+            );
+        }
+        
+        // Update game logic
+        function update() {
+            if (!gameRunning || paused) return;
+            
+            gameTime++;
+            
+            // Update player position from mouse
+            player.y = Math.max(120, Math.min(canvas.height - 130, mouseY));
+            
+            // Spawn enemies
+            if (Date.now() - lastSpawn > spawnRate) {
+                spawnEnemy();
+                lastSpawn = Date.now();
+                
+                // Increase difficulty every 8 enemies
+                if (score % 8 === 0 && score > 0) {
+                    difficulty += 0.3;
+                    spawnRate = Math.max(550, spawnRate - 80);
+                }
+            }
+            
+            // Update projectiles
+            for (let i = projectiles.length - 1; i >= 0; i--) {
+                const p = projectiles[i];
+                p.x += p.vx;
+                p.y += p.vy;
+                
+                // Remove off screen
+                if (p.x > canvas.width + 50) {
+                    projectiles.splice(i, 1);
+                    continue;
+                }
+                
+                // Check enemy hits
+                for (let j = enemies.length - 1; j >= 0; j--) {
+                    const e = enemies[j];
+                    if (checkCollision(p, {x: e.x, y: e.y, width: e.width, height: e.height})) {
+                        e.health--;
+                        e.hit = true;
+                        
+                        // Hit particles
+                        for (let k = 0; k < 12; k++) {
+                            particles.push({
+                                x: p.x + 20,
+                                y: p.y,
+                                vx: Math.random() * 6 - 3,
+                                vy: Math.random() * 6 - 4,
+                                life: 1,
+                                size: 4 + Math.random() * 4,
+                                color: '#8B0000'
+                            });
+                        }
+                        
+                        playSound('hit');
+                        
+                        // Remove projectile
+                        projectiles.splice(i, 1);
+                        
+                        if (e.health <= 0) {
+                            // Kill enemy
+                            score += e.type === 'strong' ? 30 : (e.type === 'fast' ? 15 : 20);
+                            updateScore();
+                            
+                            // Death particles
+                            for (let k = 0; k < 25; k++) {
+                                particles.push({
+                                    x: e.x + 25,
+                                    y: e.y + 35,
+                                    vx: Math.random() * 8 - 4,
+                                    vy: Math.random() * -5 - 2,
+                                    life: 1,
+                                    size: 6 + Math.random() * 5,
+                                    color: '#8B0000'
+                                });
+                            }
+                            
+                            playSound('enemyHit');
+                            enemies.splice(j, 1);
+                        }
+                        break;
+                    }
+                }
+            }
+            
+            // Update enemies
+            for (let i = enemies.length - 1; i >= 0; i--) {
+                const e = enemies[i];
+                e.x -= e.speed;
+                
+                // Reached the Zulu lines?
+                if (e.x < player.x + 40) {
+                    // Damage empire
+                    player.health -= e.type === 'strong' ? 22 : 14;
+                    updateHealth();
+                    
+                    // Explosion effect
+                    for (let k = 0; k < 18; k++) {
+                        particles.push({
+                            x: e.x + 30,
+                            y: e.y + 40,
+                            vx: Math.random() * 4 - 2,
+                            vy: Math.random() * -6,
+                            life: 0.9,
+                            size: 7,
+                            color: '#ff3300'
+                        });
+                    }
+                    
+                    playSound('hit');
+                    enemies.splice(i, 1);
+                    
+                    // Check game over
+                    if (player.health <= 0) {
+                        endGame();
+                    }
+                }
+            }
+            
+            // Update particles
+            drawParticles(); // already handled in draw but we update here too
+        }
+        
+        // Render everything
+        function draw() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            drawBackground();
+            
+            if (gameRunning) {
+                drawPlayer();
+                
+                // Draw enemies
+                for (let enemy of enemies) {
+                    drawEnemy(enemy);
+                }
+                
+                // Draw projectiles
+                for (let p of projectiles) {
+                    drawProjectile(p);
+                }
+                
+                // Draw particles
+                drawParticles();
+                
+                // Wave / difficulty indicator (top right)
+                ctx.save();
+                ctx.font = '12px "Press Start 2P"';
+                ctx.fillStyle = '#DAA520';
+                ctx.textAlign = 'right';
+                ctx.fillText(`WAVE ${Math.floor(difficulty)}`, canvas.width - 30, 40);
+                ctx.restore();
+            } else {
+                // Idle Shaka on menu / game over
+                ctx.save();
+                ctx.globalAlpha = 0.4;
+                player.x = 150;
+                drawPlayer();
+                ctx.restore();
+            }
+        }
+        
+        function gameLoop() {
+            update();
+            draw();
+            requestAnimationFrame(gameLoop);
+        }
+        
+        function updateScore() {
+            document.getElementById('score').textContent = String(Math.floor(score)).padStart(5, '0');
+            
+            if (score > highScore) {
+                highScore = score;
+                localStorage.setItem('shakaHighScore', highScore);
+                document.getElementById('highscore').textContent = String(Math.floor(highScore)).padStart(5, '0');
+            }
+        }
+        
+        function updateHealth() {
+            const percent = Math.max(0, Math.floor((player.health / player.maxHealth) * 100));
+            document.getElementById('health-fill').style.width = percent + '%';
+            
+            // Flash red when low
+            if (percent < 30) {
+                document.getElementById('health-fill').style.background = 'linear-gradient(#ff0000, #cc0000)';
+            }
+        }
+        
+        function startGame() {
+            // Reset everything
+            document.getElementById('start-screen').classList.remove('active');
+            
+            player.health = 100;
+            score = 0;
+            difficulty = 1;
+            spawnRate = 1200;
+            projectiles = [];
+            enemies = [];
+            particles = [];
+            gameTime = 0;
+            lastSpawn = Date.now();
+            
+            updateScore();
+            updateHealth();
+            
+            gameRunning = true;
+            paused = false;
+            
+            // Init audio
+            if (!audioCtx) {
+                audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            }
+            
+            // First enemy immediately
+            spawnEnemy();
+        }
+        
+        function endGame() {
+            gameRunning = false;
+            
+            const finalText = document.getElementById('final-score-text');
+            finalText.innerHTML = `FINAL SCORE<br><span style="font-size:42px">${Math.floor(score)}</span>`;
+            
+            // Random fact
+            const factEl = document.getElementById('game-over-fact');
+            factEl.innerHTML = `<strong>LEGACY:</strong> ${facts[Math.floor(Math.random() * facts.length)]}`;
+            
+            document.getElementById('game-over-screen').classList.add('active');
+        }
+        
+        function restartGame() {
+            document.getElementById('game-over-screen').classList.remove('active');
+            startGame();
+        }
+        
+        function togglePause() {
+            if (!gameRunning) return;
+            paused = !paused;
+            const pauseScreen = document.getElementById('pause-screen');
+            if (paused) {
+                pauseScreen.classList.add('active');
+            } else {
+                pauseScreen.classList.remove('active');
+            }
+        }
+        
+        function quitToMenu() {
+            paused = false;
+            gameRunning = false;
+            document.getElementById('pause-screen').classList.remove('active');
+            document.getElementById('start-screen').classList.add('active');
+        }
+        
+        // Input handlers
+        function handleMouseMove(e) {
+            const rect = canvas.getBoundingClientRect();
+            mouseY = e.clientY - rect.top;
+        }
+        
+        function handleClick(e) {
+            if (!gameRunning || paused) return;
+            
+            const rect = canvas.getBoundingClientRect();
+            const clickX = e.clientX - rect.left;
+            const clickY = e.clientY - rect.top;
+            
+            // Throw iklwa spear toward click (but always forward)
+            const dx = 1; // always right
+            const dy = (clickY - player.y - 35) * 0.3;
+            
+            projectiles.push({
+                x: player.x + 105,
+                y: player.y + 28,
+                vx: 14,
+                vy: dy,
+                width: 35,
+                height: 8
+            });
+            
+            playSound('throw');
+        }
+        
+        // Keyboard support
+        function handleKeyDown(e) {
+            if (e.key === 'Escape' && gameRunning) {
+                e.preventDefault();
+                togglePause();
+            }
+            
+            if (!gameRunning) return;
+            
+            // Arrow keys as backup for mouse
+            if (e.key === 'ArrowUp' || e.key === 'w' || e.key === 'W') {
+                mouseY = Math.max(120, mouseY - 45);
+            }
+            if (e.key === 'ArrowDown' || e.key === 's' || e.key === 'S') {
+                mouseY = Math.min(canvas.height - 130, mouseY + 45);
+            }
+            
+            if (e.key === ' ' && !paused) {
+                // Space also throws spear (centered)
+                projectiles.push({
+                    x: player.x + 105,
+                    y: player.y + 28,
+                    vx: 14,
+                    vy: 0,
+                    width: 35,
+                    height: 8
+                });
+                playSound('throw');
+            }
+        }
+        
+        // Initialize game
+        function init() {
+            // Show high score
+            document.getElementById('highscore').textContent = String(highScore).padStart(5, '0');
+            
+            // Start the loop immediately
+            gameLoop();
+            
+            // Event listeners
+            canvas.addEventListener('mousemove', handleMouseMove);
+            canvas.addEventListener('click', handleClick);
+            window.addEventListener('keydown', handleKeyDown);
+            
+            console.log('%c✅ Shaka Zulu: Iklwa Empire ready! Fully playable single-file HTML game.', 'color:#DAA520; font-family:monospace');
+        }
+        
+        // Boot the game
+        window.onload = init;
+    </script>
+</body>
+</html>
+```
