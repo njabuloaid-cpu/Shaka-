@@ -1,4 +1,4 @@
-```html
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -196,23 +196,23 @@
     <div id="start-screen" class="overlay active">
         <h1>SHAKA ZULU</h1>
         <h2>IKLWA EMPIRE</h2>
-        <p>Lead the greatest warrior king.<br>Conquer 5 kingdoms. Build the United Zulu Empire.</p>
+        <p>You are Shaka.<br>Fight as a real Zulu warrior.<br>Stab, kick, shield, throw — conquer 5 kingdoms.</p>
         
         <button onclick="startGame()">BEGIN THE CONQUEST</button>
         
         <div class="fact">
-            <strong>NEW MOVES UNLOCKED AS YOU GROW:</strong><br>
-            🪓 LEFT CLICK = Throw Iklwa<br>
-            🗡️ S = Stab (close range)<br>
-            🦵 K = Kick (knockback)<br>
-            🛡️ H = iHawu Shield (block damage)<br>
-            MOUSE = Move Shaka<br>
+            <strong>CONTROLS — REAL WARRIOR COMBAT:</strong><br>
+            A / D or ← → = Move Shaka (run into battle)<br>
+            LEFT CLICK = Throw Iklwa (ranged)<br>
+            S = Stab (close-range iklwa thrust)<br>
+            K = Kick (knockback enemies)<br>
+            H = iHawu Shield Block (3 seconds)<br>
             ESC = Pause
         </div>
         
         <div style="margin-top:20px; font-size:13px; opacity:0.8;">
-            5 STAGES • 5 KINGS • 5 KINGDOMS<br>
-            Grow stronger with every victory!
+            5 STAGES • 5 KINGS • Side-scrolling battlefield<br>
+            Feel every stab and shield bash — no flying enemies!
         </div>
     </div>
 
@@ -220,7 +220,7 @@
     <div id="stage-clear-screen" class="overlay" style="background:rgba(0,0,0,0.75); display:none;">
         <h1 style="color:#00ff88;">KINGDOM CONQUERED!</h1>
         <p id="stage-clear-text" style="font-size:28px; color:var(--zulu-gold);"></p>
-        <p>Strength grows. The Zulu Empire expands.</p>
+        <p>Your strength grows. The Zulu Empire expands.</p>
         <button onclick="hideStageClear()" style="background:#006400;">CONTINUE TO NEXT KINGDOM</button>
     </div>
 
@@ -241,7 +241,7 @@
         <h1 style="color:#ffcc44; font-size:54px; text-shadow: 0 0 20px #00ff88;">ZULU EMPIRE UNITED!</h1>
         <p style="font-size:28px; color:#fff;">5 KINGDOMS CONQUERED</p>
         <p id="victory-score" style="font-size:32px; color:var(--zulu-gold);"></p>
-        <p>Shaka Zulu stands as the greatest king in history.<br>The buffalo horns formation has triumphed.</p>
+        <p>Shaka Zulu — the greatest warrior king in history.<br>The buffalo horns formation has triumphed.</p>
         
         <button onclick="restartGame()" style="background:#006400; border-color:#ffcc44;">PLAY AGAIN — NEW CONQUEST</button>
         
@@ -259,7 +259,7 @@
     </div>
 
     <footer>
-        Fully playable single-file HTML game • 5 stages • Real Zulu moves &amp; history • Paste as index.html on GitHub Pages
+        Fully playable single-file HTML game • Realistic side-scrolling Zulu warrior combat • 5 stages • Paste as index.html on GitHub Pages
     </footer>
 
     <script>
@@ -269,13 +269,16 @@
         
         // Game variables
         let player = {
-            x: 120,
+            worldX: 300,
+            screenX: 250,
             y: 250,
             width: 60,
             height: 90,
             health: 100,
             maxHealth: 100,
-            strength: 1
+            strength: 1,
+            vx: 0,
+            running: false
         };
         
         let projectiles = [];
@@ -289,6 +292,7 @@
         let spawnRate = 1100;
         let difficulty = 1;
         let gameTime = 0;
+        let worldScroll = 0;
         
         // Stage system
         let currentStage = 1;
@@ -303,7 +307,7 @@
             { id: 5, name: "FINAL CONQUEST", king: "THE LAST RIVAL", required: 30, bossHP: 220, bg: "dawn" }
         ];
         
-        // New combat system
+        // Combat
         let attackCooldown = 0;
         let shieldActive = false;
         let shieldTime = 0;
@@ -311,25 +315,24 @@
         let playerIsStabbing = 0;
         let playerIsKicking = 0;
         
-        // Mouse
+        // Input
+        let keys = {};
         let mouseY = 250;
         
         // Audio
         let audioCtx;
         
-        // Historical facts
+        // Facts
         const facts = [
-            "Shaka invented the iklwa — a short stabbing spear that changed African warfare forever.",
-            "The buffalo horns formation: chest pins, horns encircle, loins reinforce.",
-            "iHawu shield: the legendary Zulu war shield used for both defense and intimidation.",
-            "Shaka's impis marched 50 miles a day and lived off the land.",
-            "At Gqokli Hill, Shaka defeated Zwide using revolutionary tactics."
+            "Shaka invented the iklwa — a short stabbing spear for close combat.",
+            "The iHawu shield was used to hook enemy shields and stab under the arm.",
+            "Zulu impis fought in the buffalo horns formation — real battlefield tactics.",
+            "Shaka's warriors could march 50 miles a day and live off the land."
         ];
         
-        // Stage clear message
+        // Stage clear
         let stageClearMessage = { active: false, text: '', timer: 0 };
         
-        // Helper sound
         function playSound(type) {
             if (!audioCtx) return;
             const osc = audioCtx.createOscillator();
@@ -337,74 +340,35 @@
             osc.connect(gain);
             gain.connect(audioCtx.destination);
             
-            if (type === 'throw') {
-                osc.frequency.setValueAtTime(180, audioCtx.currentTime);
-                gain.gain.value = 0.3;
-                osc.type = 'sawtooth';
-                osc.start(); setTimeout(() => osc.stop(), 80);
-            } else if (type === 'stab') {
-                osc.frequency.setValueAtTime(280, audioCtx.currentTime);
-                gain.gain.value = 0.5;
-                osc.type = 'square';
-                osc.start(); setTimeout(() => osc.stop(), 60);
-            } else if (type === 'kick') {
-                osc.frequency.setValueAtTime(120, audioCtx.currentTime);
-                gain.gain.value = 0.6;
-                osc.type = 'sine';
-                osc.start(); setTimeout(() => osc.stop(), 140);
-            } else if (type === 'hit') {
-                osc.frequency.setValueAtTime(400, audioCtx.currentTime);
-                gain.gain.value = 0.6;
-                osc.type = 'square';
-                osc.start();
-                setTimeout(() => { osc.frequency.setValueAtTime(200, audioCtx.currentTime + 0.05); }, 30);
-                setTimeout(() => osc.stop(), 120);
-            } else if (type === 'enemyHit') {
-                osc.frequency.setValueAtTime(90, audioCtx.currentTime);
-                gain.gain.value = 0.4;
-                osc.type = 'sine';
-                osc.start(); setTimeout(() => osc.stop(), 180);
-            } else if (type === 'shield') {
-                osc.frequency.setValueAtTime(600, audioCtx.currentTime);
-                gain.gain.value = 0.2;
-                osc.type = 'triangle';
-                osc.start(); setTimeout(() => osc.stop(), 220);
-            }
+            if (type === 'throw') { osc.frequency.setValueAtTime(180, audioCtx.currentTime); gain.gain.value = 0.3; osc.type = 'sawtooth'; osc.start(); setTimeout(() => osc.stop(), 80); }
+            else if (type === 'stab') { osc.frequency.setValueAtTime(280, audioCtx.currentTime); gain.gain.value = 0.5; osc.type = 'square'; osc.start(); setTimeout(() => osc.stop(), 60); }
+            else if (type === 'kick') { osc.frequency.setValueAtTime(120, audioCtx.currentTime); gain.gain.value = 0.6; osc.type = 'sine'; osc.start(); setTimeout(() => osc.stop(), 140); }
+            else if (type === 'hit') { osc.frequency.setValueAtTime(400, audioCtx.currentTime); gain.gain.value = 0.6; osc.type = 'square'; osc.start(); setTimeout(() => { osc.frequency.setValueAtTime(200, audioCtx.currentTime + 0.05); }, 30); setTimeout(() => osc.stop(), 120); }
+            else if (type === 'enemyHit') { osc.frequency.setValueAtTime(90, audioCtx.currentTime); gain.gain.value = 0.4; osc.type = 'sine'; osc.start(); setTimeout(() => osc.stop(), 180); }
+            else if (type === 'shield') { osc.frequency.setValueAtTime(600, audioCtx.currentTime); gain.gain.value = 0.2; osc.type = 'triangle'; osc.start(); setTimeout(() => osc.stop(), 220); }
         }
         
-        // Draw background with day/night, houses, fires, civilians
         function drawBackground(stage) {
             const data = stageData[stage - 1] || stageData[0];
             const isNight = data.bg === "night";
             const isDusk = data.bg === "dusk";
             const isDawn = data.bg === "dawn";
+            const parallax = worldScroll * 0.3;
             
-            // Sky
             let skyGradient = ctx.createLinearGradient(0, 0, 0, 350);
-            if (isNight) {
-                skyGradient.addColorStop(0, '#001122');
-                skyGradient.addColorStop(1, '#112233');
-            } else if (isDusk) {
-                skyGradient.addColorStop(0, '#aa5522');
-                skyGradient.addColorStop(1, '#331100');
-            } else if (isDawn) {
-                skyGradient.addColorStop(0, '#ffcc88');
-                skyGradient.addColorStop(1, '#448822');
-            } else {
-                skyGradient.addColorStop(0, '#5c8a5c');
-                skyGradient.addColorStop(1, '#2e5c2e');
-            }
+            if (isNight) { skyGradient.addColorStop(0, '#001122'); skyGradient.addColorStop(1, '#112233'); }
+            else if (isDusk) { skyGradient.addColorStop(0, '#aa5522'); skyGradient.addColorStop(1, '#331100'); }
+            else if (isDawn) { skyGradient.addColorStop(0, '#ffcc88'); skyGradient.addColorStop(1, '#448822'); }
+            else { skyGradient.addColorStop(0, '#5c8a5c'); skyGradient.addColorStop(1, '#2e5c2e'); }
             ctx.fillStyle = skyGradient;
             ctx.fillRect(0, 0, canvas.width, 350);
             
-            // Sun / Moon
             if (!isNight) {
                 ctx.fillStyle = isDawn ? '#ffdd99' : '#ffcc44';
                 ctx.beginPath();
                 ctx.arc(650, 80, 35, 0, Math.PI * 2);
                 ctx.fill();
             } else {
-                // Moon
                 ctx.fillStyle = '#eeeeee';
                 ctx.beginPath();
                 ctx.arc(650, 90, 28, 0, Math.PI * 2);
@@ -415,88 +379,64 @@
                 ctx.fill();
             }
             
-            // Stars at night
             if (isNight) {
                 ctx.fillStyle = '#ffffff';
                 for (let i = 0; i < 35; i++) {
-                    const x = (i * 31) % 800;
+                    const x = (i * 31 + parallax * 0.1) % 800;
                     const y = 30 + (i * 13) % 140;
                     ctx.fillRect(x, y, 2, 2);
                 }
             }
             
-            // Hills
             ctx.fillStyle = isNight ? '#0a1a0a' : '#1e3d1e';
             ctx.beginPath();
-            ctx.moveTo(0, 350);
-            ctx.quadraticCurveTo(180, 210, 400, 350);
-            ctx.quadraticCurveTo(620, 190, 800, 350);
+            ctx.moveTo(0 - parallax * 0.6, 350);
+            ctx.quadraticCurveTo(180 - parallax * 0.6, 210, 400 - parallax * 0.6, 350);
+            ctx.quadraticCurveTo(620 - parallax * 0.6, 190, 800 - parallax * 0.6, 350);
             ctx.fill();
             
-            // Ground
             ctx.fillStyle = '#0f2a0f';
             ctx.fillRect(0, 350, canvas.width, canvas.height - 350);
             
-            // Grass tufts
             ctx.strokeStyle = isNight ? '#1a2a1a' : '#1a3d1a';
             ctx.lineWidth = 3;
             for (let i = 0; i < 70; i++) {
-                const x = Math.random() * canvas.width;
-                const y = 355 + Math.random() * 140;
+                const x = (i * 13 + parallax * 0.8) % canvas.width;
+                const y = 355 + (i * 7) % 140;
                 ctx.beginPath();
                 ctx.moveTo(x, y);
                 ctx.lineTo(x + (Math.random() * 14 - 7), y - 32);
                 ctx.stroke();
             }
             
-            // Zulu kraal HOUSES (beehive huts)
-            const hutColor = isNight ? '#5c3317' : '#8B4513';
-            ctx.fillStyle = hutColor;
-            // Hut 1
-            ctx.fillRect(35, 375, 58, 28);
+            const hutOffset = parallax * 1.2;
+            ctx.fillStyle = isNight ? '#5c3317' : '#8B4513';
+            ctx.fillRect(35 - hutOffset, 375, 58, 28);
             ctx.fillStyle = '#d2a679';
             ctx.beginPath();
-            ctx.ellipse(64, 365, 36, 20, 0, 0, Math.PI * 2);
-            ctx.fill();
-            ctx.strokeStyle = '#3d2b1f';
-            ctx.lineWidth = 4;
-            for (let i = 0; i < 7; i++) {
-                ctx.beginPath();
-                ctx.moveTo(38 + i * 9, 378);
-                ctx.lineTo(64, 348);
-                ctx.stroke();
-            }
-            // Hut 2
-            ctx.fillStyle = hutColor;
-            ctx.fillRect(520, 385, 52, 25);
-            ctx.fillStyle = '#d2a679';
-            ctx.beginPath();
-            ctx.ellipse(545, 375, 32, 18, 0, 0, Math.PI * 2);
+            ctx.ellipse(64 - hutOffset, 365, 36, 20, 0, 0, Math.PI * 2);
             ctx.fill();
             
-            // CAMPFIRES
+            ctx.fillStyle = isNight ? '#5c3317' : '#8B4513';
+            ctx.fillRect(520 - hutOffset * 1.1, 385, 52, 25);
+            ctx.fillStyle = '#d2a679';
+            ctx.beginPath();
+            ctx.ellipse(545 - hutOffset * 1.1, 375, 32, 18, 0, 0, Math.PI * 2);
+            ctx.fill();
+            
             const fireFlicker = Math.sin(gameTime / 5) * 4 + 4;
-            // Fire 1
+            const fireOffset = parallax * 1.4;
             ctx.fillStyle = '#3d2b1f';
-            ctx.fillRect(295, 415, 18, 12);
+            ctx.fillRect(295 - fireOffset, 415, 18, 12);
             ctx.fillStyle = '#ff8800';
-            ctx.fillRect(290, 400 - fireFlicker, 12, 22 + fireFlicker);
+            ctx.fillRect(290 - fireOffset, 400 - fireFlicker, 12, 22 + fireFlicker);
             ctx.fillStyle = '#ff4400';
-            ctx.fillRect(298, 392 - fireFlicker * 0.8, 8, 14 + fireFlicker);
-            // Fire 2
-            ctx.fillStyle = '#3d2b1f';
-            ctx.fillRect(645, 408, 18, 12);
-            ctx.fillStyle = '#ff8800';
-            ctx.fillRect(640, 393 - fireFlicker * 1.2, 12, 22 + fireFlicker);
-            ctx.fillStyle = '#ff4400';
-            ctx.fillRect(648, 385 - fireFlicker, 8, 14 + fireFlicker);
+            ctx.fillRect(298 - fireOffset, 392 - fireFlicker * 0.8, 8, 14 + fireFlicker);
             
-            // CIVILIANS (Zulu villagers cheering in background)
-            drawCivilian(170, 380);
-            drawCivilian(410, 392);
-            drawCivilian(710, 375);
+            drawCivilian(170 - parallax * 1.6, 380);
+            drawCivilian(410 - parallax * 1.3, 392);
+            drawCivilian(710 - parallax * 1.1, 375);
             
-            // Stage name on background
             ctx.save();
             ctx.font = 'bold 18px "Press Start 2P"';
             ctx.fillStyle = 'rgba(218,165,32,0.25)';
@@ -506,18 +446,14 @@
         }
         
         function drawCivilian(x, y) {
-            // Head
             ctx.fillStyle = '#d2a679';
             ctx.beginPath();
             ctx.arc(x, y, 9, 0, Math.PI * 2);
             ctx.fill();
-            // Headband
             ctx.fillStyle = '#8B0000';
             ctx.fillRect(x - 11, y - 12, 22, 6);
-            // Body
             ctx.fillStyle = '#3d2b1f';
             ctx.fillRect(x - 7, y + 8, 14, 24);
-            // Arms (cheering)
             ctx.strokeStyle = '#3d2b1f';
             ctx.lineWidth = 6;
             ctx.beginPath();
@@ -526,7 +462,6 @@
             ctx.moveTo(x + 7, y + 14);
             ctx.quadraticCurveTo(x + 18, y + 6, x + 24, y + 25);
             ctx.stroke();
-            // Legs
             ctx.beginPath();
             ctx.moveTo(x - 4, y + 30);
             ctx.lineTo(x - 9, y + 48);
@@ -535,24 +470,22 @@
             ctx.stroke();
         }
         
-        // Draw player (Shaka) with new attack animations + iHawu shield
         function drawPlayer() {
-            const stabOffset = playerIsStabbing > 0 ? 12 : 0;
-            const kickOffset = playerIsKicking > 0 ? 8 : 0;
+            const runBob = player.running ? Math.sin(gameTime / 4) * 4 : 0;
+            const stabOffset = playerIsStabbing > 0 ? 18 : 0;
+            const kickOffset = playerIsKicking > 0 ? 12 : 0;
             
-            // Shadow
-            ctx.fillStyle = 'rgba(0,0,0,0.3)';
+            ctx.fillStyle = 'rgba(0,0,0,0.4)';
             ctx.beginPath();
-            ctx.ellipse(player.x + 18, player.y + player.height + 8, 38, 12, 0, 0, Math.PI * 2);
+            ctx.ellipse(player.screenX + 18, player.y + player.height + 8 + runBob, 38, 12, 0, 0, Math.PI * 2);
             ctx.fill();
             
-            // iHawu SHIELD (always visible, bigger when active)
-            const shieldSize = shieldActive ? 1.25 : 1;
+            const shieldSize = shieldActive ? 1.3 : 1;
             ctx.fillStyle = '#d2a679';
             ctx.strokeStyle = '#3d2b1f';
-            ctx.lineWidth = shieldActive ? 12 : 8;
+            ctx.lineWidth = shieldActive ? 14 : 8;
             ctx.save();
-            ctx.translate(player.x + 8, player.y + 38);
+            ctx.translate(player.screenX + 8, player.y + 38 + runBob);
             ctx.scale(shieldSize, shieldSize);
             ctx.rotate(Math.PI / 6);
             ctx.beginPath();
@@ -561,105 +494,106 @@
             ctx.stroke();
             ctx.restore();
             
-            // Shield pattern
             ctx.fillStyle = '#8B0000';
-            ctx.fillRect(player.x - 10, player.y + 18, 14, 38);
+            ctx.fillRect(player.screenX - 10, player.y + 18 + runBob, 14, 38);
             
-            // Body
             ctx.fillStyle = '#3d2b1f';
-            ctx.fillRect(player.x + 24, player.y + 24, 30, 46);
+            ctx.fillRect(player.screenX + 24, player.y + 24 + runBob, 30, 46);
             
-            // Arms
             ctx.strokeStyle = '#3d2b1f';
-            ctx.lineWidth = 13;
+            ctx.lineWidth = 11;
             ctx.beginPath();
-            ctx.moveTo(player.x + 32, player.y + 35);
-            // Stab animation
-            if (playerIsStabbing > 0) {
-                ctx.quadraticCurveTo(player.x + 70, player.y + 22, player.x + 115 + stabOffset, player.y + 18);
+            if (player.running) {
+                const legSwing = Math.sin(gameTime / 3) * 18;
+                ctx.moveTo(player.screenX + 32, player.y + 68 + runBob);
+                ctx.lineTo(player.screenX + 18, player.y + 88 + legSwing);
+                ctx.moveTo(player.screenX + 46, player.y + 68 + runBob);
+                ctx.lineTo(player.screenX + 58, player.y + 82 - legSwing);
             } else {
-                ctx.quadraticCurveTo(player.x + 55, player.y + 45, player.x + 72, player.y + 30);
+                ctx.moveTo(player.screenX + 32, player.y + 68 + runBob);
+                ctx.lineTo(player.screenX + 20, player.y + 88 + kickOffset);
+                ctx.moveTo(player.screenX + 46, player.y + 68 + runBob);
+                ctx.lineTo(player.screenX + 55 + kickOffset * 2, player.y + 82);
             }
             ctx.stroke();
             
-            // Legs + kick animation
-            ctx.lineWidth = 11;
+            ctx.lineWidth = 13;
             ctx.beginPath();
-            ctx.moveTo(player.x + 32, player.y + 68);
-            ctx.lineTo(player.x + 20, player.y + 88 + kickOffset);
-            ctx.moveTo(player.x + 46, player.y + 68);
-            ctx.lineTo(player.x + 55 + kickOffset * 2, player.y + 82);
+            ctx.moveTo(player.screenX + 32, player.y + 35 + runBob);
+            if (playerIsStabbing > 0) {
+                ctx.quadraticCurveTo(player.screenX + 75, player.y + 18, player.screenX + 128 + stabOffset, player.y + 12);
+            } else {
+                ctx.quadraticCurveTo(player.screenX + 55, player.y + 45, player.screenX + 78, player.y + 28);
+            }
             ctx.stroke();
             
-            // Head
             ctx.fillStyle = '#d2a679';
             ctx.beginPath();
-            ctx.arc(player.x + 42, player.y + 22, 15, 0, Math.PI * 2);
+            ctx.arc(player.screenX + 42, player.y + 22 + runBob, 15, 0, Math.PI * 2);
             ctx.fill();
             
-            // Headband & feather
             ctx.fillStyle = '#8B0000';
-            ctx.fillRect(player.x + 29, player.y + 8, 25, 9);
+            ctx.fillRect(player.screenX + 29, player.y + 8 + runBob, 25, 9);
             ctx.strokeStyle = '#fff';
             ctx.lineWidth = 5;
             ctx.beginPath();
-            ctx.moveTo(player.x + 50, player.y + 9);
-            ctx.quadraticCurveTo(player.x + 64, player.y - 18, player.x + 72, player.y - 32);
+            ctx.moveTo(player.screenX + 50, player.y + 9 + runBob);
+            ctx.quadraticCurveTo(player.screenX + 64, player.y - 18, player.screenX + 72, player.y - 32);
             ctx.stroke();
             
-            // Eyes
             ctx.fillStyle = '#000';
-            ctx.fillRect(player.x + 48, player.y + 18, 5, 5);
+            ctx.fillRect(player.screenX + 48, player.y + 18 + runBob, 5, 5);
             
-            // Iklwa spear (held)
             ctx.strokeStyle = '#3d2b1f';
             ctx.lineWidth = 7;
             ctx.beginPath();
-            ctx.moveTo(player.x + 72, player.y + 30);
-            ctx.lineTo(player.x + 118, player.y + 14);
+            ctx.moveTo(player.screenX + 78, player.y + 28 + runBob);
+            ctx.lineTo(player.screenX + 125, player.y + 14 + runBob);
             ctx.stroke();
-            
-            // Spear blade
             ctx.fillStyle = '#c0c0c0';
             ctx.beginPath();
-            ctx.moveTo(player.x + 118, player.y + 14);
-            ctx.lineTo(player.x + 135, player.y + 6);
-            ctx.lineTo(player.x + 118, player.y + 24);
+            ctx.moveTo(player.screenX + 125, player.y + 14 + runBob);
+            ctx.lineTo(player.screenX + 142, player.y + 6 + runBob);
+            ctx.lineTo(player.screenX + 125, player.y + 24 + runBob);
             ctx.fill();
             
-            // Shield glow when active
             if (shieldActive) {
                 ctx.strokeStyle = 'rgba(255,220,80,0.6)';
                 ctx.lineWidth = 18;
                 ctx.beginPath();
-                ctx.ellipse(player.x + 8, player.y + 38, 32, 48, Math.PI / 6, 0, Math.PI * 2);
+                ctx.ellipse(player.screenX + 8, player.y + 38 + runBob, 32, 48, Math.PI / 6, 0, Math.PI * 2);
                 ctx.stroke();
             }
         }
         
-        // Draw enemy (regular soldiers + kings)
         function drawEnemy(enemy) {
-            const x = enemy.x;
-            const y = enemy.y;
-            const isBoss = enemy.isBoss || false;
+            const x = enemy.screenX;
+            const y = enemy.y + Math.sin(gameTime / 8 + enemy.bobPhase) * 7;
+            const isBoss = enemy.isBoss;
+            const runBob = Math.sin(gameTime / 3 + enemy.bobPhase) * 6;
             
-            // Shadow
-            ctx.fillStyle = 'rgba(0,0,0,0.3)';
+            ctx.fillStyle = 'rgba(0,0,0,0.4)';
             ctx.beginPath();
             ctx.ellipse(x + 22, y + enemy.height + 8, isBoss ? 38 : 28, 11, 0, 0, Math.PI * 2);
             ctx.fill();
             
-            // Body
             ctx.fillStyle = isBoss ? '#5c2a1a' : '#4a2a1a';
             ctx.fillRect(x + 8, y + 22, isBoss ? 38 : 32, isBoss ? 52 : 44);
             
-            // Head
             ctx.fillStyle = '#d2a679';
             ctx.beginPath();
             ctx.arc(x + 26, y + 20, isBoss ? 16 : 13, 0, Math.PI * 2);
             ctx.fill();
             
-            // Enemy spear
+            ctx.strokeStyle = '#3d2b1f';
+            ctx.lineWidth = 9;
+            ctx.beginPath();
+            ctx.moveTo(x + 18, y + 68);
+            ctx.lineTo(x + 12, y + 88 + runBob);
+            ctx.moveTo(x + 34, y + 68);
+            ctx.lineTo(x + 42, y + 88 - runBob);
+            ctx.stroke();
+            
             ctx.strokeStyle = '#3d2b1f';
             ctx.lineWidth = 6;
             ctx.beginPath();
@@ -667,13 +601,11 @@
             ctx.lineTo(x + 62, y + 48);
             ctx.stroke();
             
-            // Shield
             ctx.fillStyle = isBoss ? '#aa7733' : '#8b5a2b';
             ctx.beginPath();
             ctx.ellipse(x + 6, y + 37, isBoss ? 22 : 18, isBoss ? 36 : 28, -Math.PI / 4, 0, Math.PI * 2);
             ctx.fill();
             
-            // Boss crown / feathers
             if (isBoss) {
                 ctx.fillStyle = '#DAA520';
                 ctx.fillRect(x + 12, y + 4, 28, 8);
@@ -687,17 +619,27 @@
                 ctx.stroke();
             }
             
-            // Hit flash
             if (enemy.hit) {
                 ctx.fillStyle = 'rgba(255,80,0,0.6)';
                 ctx.fillRect(x + 12, y + 26, 32, 18);
             }
+            
+            if (Math.random() < 0.3) {
+                particles.push({
+                    x: x + 25,
+                    y: y + 85,
+                    vx: -2 - Math.random() * 3,
+                    vy: -1 - Math.random() * 2,
+                    life: 0.6,
+                    size: 4,
+                    color: '#eeddaa'
+                });
+            }
         }
         
-        // Draw projectile (iklwa)
         function drawProjectile(p) {
             ctx.save();
-            ctx.translate(p.x, p.y);
+            ctx.translate(p.screenX, p.y);
             ctx.rotate(Math.atan2(p.vy, p.vx));
             ctx.strokeStyle = '#3d2b1f';
             ctx.lineWidth = 6;
@@ -714,7 +656,6 @@
             ctx.restore();
         }
         
-        // Particles
         function drawParticles() {
             for (let i = particles.length - 1; i >= 0; i--) {
                 const p = particles[i];
@@ -722,53 +663,56 @@
                 ctx.fillStyle = p.color;
                 ctx.fillRect(p.x, p.y, p.size, p.size);
                 ctx.globalAlpha = 1;
-                
                 p.x += p.vx;
                 p.y += p.vy;
                 p.life -= 0.028;
                 p.vx *= 0.97;
                 p.vy *= 0.97;
-                
                 if (p.life <= 0) particles.splice(i, 1);
             }
         }
         
-        // Spawn regular soldier
         function spawnEnemy() {
             const typeRoll = Math.random();
             let enemy = {
-                x: canvas.width + 40,
+                worldX: player.worldX + 550 + Math.random() * 120,
                 y: 160 + Math.random() * 190,
+                baseY: 160 + Math.random() * 190,
                 width: 58,
                 height: 88,
                 speed: 2.1 + difficulty * 0.4,
                 health: typeRoll < 0.15 ? 2 : 1,
                 type: typeRoll < 0.15 ? 'strong' : 'normal',
                 hit: false,
-                isBoss: false
+                isBoss: false,
+                bobPhase: Math.random() * Math.PI * 2
             };
             enemies.push(enemy);
         }
         
-        // Spawn KING (boss)
         function spawnBoss() {
             const data = stageData[currentStage - 1];
             let boss = {
-                x: canvas.width + 60,
+                worldX: player.worldX + 620,
                 y: 140 + Math.random() * 140,
+                baseY: 140 + Math.random() * 140,
                 width: 78,
                 height: 110,
                 speed: 1.4 + difficulty * 0.2,
                 health: data.bossHP,
                 type: 'boss',
                 hit: false,
-                isBoss: true
+                isBoss: true,
+                bobPhase: Math.random() * Math.PI * 2
             };
             enemies.push(boss);
             hasBoss = true;
         }
         
-        // Collision
+        function getScreenX(worldX) {
+            return worldX - worldScroll;
+        }
+        
         function checkCollision(a, b) {
             return !(
                 a.x + a.width < b.x ||
@@ -778,95 +722,78 @@
             );
         }
         
-        // Update logic
         function update() {
             if (!gameRunning || paused) return;
             
             gameTime++;
             attackCooldown = Math.max(0, attackCooldown - 1);
             shieldCooldown = Math.max(0, shieldCooldown - 1);
-            if (shieldActive) {
-                shieldTime--;
-                if (shieldTime <= 0) shieldActive = false;
-            }
+            if (shieldActive) { shieldTime--; if (shieldTime <= 0) shieldActive = false; }
             if (playerIsStabbing > 0) playerIsStabbing--;
             if (playerIsKicking > 0) playerIsKicking--;
             
-            // Player follows mouse
-            player.y = Math.max(130, Math.min(canvas.height - 140, mouseY));
+            player.vx = 0;
+            if (keys['arrowright'] || keys['d']) player.vx = 4.5;
+            if (keys['arrowleft'] || keys['a']) player.vx = -3.2;
+            player.worldX += player.vx;
+            player.running = Math.abs(player.vx) > 1;
             
-            // Spawn regular enemies
+            worldScroll = player.worldX - 250;
+            player.screenX = 250;
+            
             if (Date.now() - lastSpawn > spawnRate) {
                 spawnEnemy();
                 lastSpawn = Date.now();
             }
             
-            // Check if time to spawn boss
             const stageInfo = stageData[currentStage - 1];
-            if (enemiesDefeatedThisStage >= stageInfo.required && !hasBoss) {
-                spawnBoss();
-            }
+            if (enemiesDefeatedThisStage >= stageInfo.required && !hasBoss) spawnBoss();
             
-            // Update projectiles
             for (let i = projectiles.length - 1; i >= 0; i--) {
                 const p = projectiles[i];
-                p.x += p.vx;
+                p.worldX += p.vx;
                 p.y += p.vy;
+                p.screenX = getScreenX(p.worldX);
                 
-                if (p.x > canvas.width + 60) {
-                    projectiles.splice(i, 1);
-                    continue;
-                }
+                if (p.screenX > canvas.width + 100) { projectiles.splice(i, 1); continue; }
                 
                 for (let j = enemies.length - 1; j >= 0; j--) {
                     const e = enemies[j];
-                    if (checkCollision(p, {x: e.x, y: e.y, width: e.width, height: e.height})) {
+                    const eScreen = getScreenX(e.worldX);
+                    if (checkCollision({x: p.screenX, y: p.y, width: 38, height: 9}, {x: eScreen, y: e.y, width: e.width, height: e.height})) {
                         e.health -= 1 * player.strength;
                         e.hit = true;
-                        
-                        // Hit particles
                         for (let k = 0; k < 14; k++) {
-                            particles.push({x: p.x + 22, y: p.y, vx: Math.random()*7-3, vy: Math.random()*7-5, life: 1, size: 5, color: '#8B0000'});
+                            particles.push({x: p.screenX + 22, y: p.y, vx: Math.random()*7-3, vy: Math.random()*7-5, life: 1, size: 5, color: '#8B0000'});
                         }
                         playSound('hit');
-                        
                         projectiles.splice(i, 1);
-                        
-                        if (e.health <= 0) {
-                            handleEnemyDeath(e, j);
-                        }
+                        if (e.health <= 0) handleEnemyDeath(e, j);
                         break;
                     }
                 }
             }
             
-            // Update enemies
             for (let i = enemies.length - 1; i >= 0; i--) {
                 const e = enemies[i];
-                e.x -= e.speed;
+                e.worldX -= e.speed;
+                e.screenX = getScreenX(e.worldX);
+                e.y = e.baseY + Math.sin(gameTime / 8 + e.bobPhase) * 7;
                 
-                // Reached Shaka's lines
-                if (e.x < player.x + 55) {
+                if (e.screenX < player.screenX - 80) {
                     let dmg = e.isBoss ? 28 : (e.type === 'strong' ? 20 : 13);
                     if (shieldActive) dmg = Math.max(4, Math.floor(dmg * 0.35));
-                    
                     player.health -= dmg;
                     updateHealth();
-                    
-                    // Explosion
-                    for (let k = 0; k < 22; k++) {
-                        particles.push({x: e.x + 35, y: e.y + 42, vx: Math.random()*5-2, vy: Math.random()*-7, life: 0.95, size: 8, color: '#ff2200'});
-                    }
+                    for (let k = 0; k < 22; k++) particles.push({x: e.screenX + 35, y: e.y + 42, vx: Math.random()*5-2, vy: Math.random()*-7, life: 0.95, size: 8, color: '#ff2200'});
                     playSound('hit');
                     enemies.splice(i, 1);
-                    
                     if (e.isBoss) hasBoss = false;
-                    
                     if (player.health <= 0) endGame();
                 }
             }
             
-            drawParticles(); // particles update inside draw loop too
+            drawParticles();
         }
         
         function handleEnemyDeath(enemy, index) {
@@ -874,11 +801,10 @@
             score += points;
             updateScore();
             
-            // Death particles
             const bloodColor = '#8B0000';
             for (let k = 0; k < (enemy.isBoss ? 40 : 24); k++) {
                 particles.push({
-                    x: enemy.x + 30,
+                    x: enemy.screenX + 30,
                     y: enemy.y + 40,
                     vx: Math.random() * 9 - 4.5,
                     vy: Math.random() * -6 - 1,
@@ -896,11 +822,9 @@
             } else {
                 enemiesDefeatedThisStage++;
             }
-            
             enemies.splice(index, 1);
         }
         
-        // Render
         function draw() {
             ctx.clearRect(0, 0, canvas.width, canvas.height);
             drawBackground(currentStage);
@@ -912,7 +836,6 @@
                 for (let p of projectiles) drawProjectile(p);
                 drawParticles();
                 
-                // Stage indicator on canvas
                 ctx.save();
                 ctx.font = 'bold 14px "Press Start 2P"';
                 ctx.fillStyle = '#DAA520';
@@ -920,7 +843,6 @@
                 ctx.fillText(`STAGE ${currentStage}/5`, canvas.width - 25, 35);
                 ctx.restore();
                 
-                // Boss warning
                 if (hasBoss) {
                     ctx.fillStyle = 'rgba(255,60,0,0.7)';
                     ctx.font = 'bold 13px "Press Start 2P"';
@@ -929,7 +851,6 @@
                 }
             }
             
-            // Stage clear flash
             if (stageClearMessage.active && stageClearMessage.timer > 0) {
                 ctx.save();
                 ctx.globalAlpha = Math.sin(stageClearMessage.timer / 3) * 0.4 + 0.6;
@@ -963,11 +884,8 @@
         function updateHealth() {
             const percent = Math.max(0, Math.floor((player.health / player.maxHealth) * 100));
             document.getElementById('health-fill').style.width = percent + '%';
-            if (percent < 30) {
-                document.getElementById('health-fill').style.background = 'linear-gradient(#ff0000, #cc0000)';
-            } else {
-                document.getElementById('health-fill').style.background = 'linear-gradient(#00ff00, #00cc00)';
-            }
+            if (percent < 30) document.getElementById('health-fill').style.background = 'linear-gradient(#ff0000, #cc0000)';
+            else document.getElementById('health-fill').style.background = 'linear-gradient(#00ff00, #00cc00)';
         }
         
         function updateStageUI() {
@@ -979,16 +897,17 @@
         function startGame() {
             document.getElementById('start-screen').classList.remove('active');
             
-            // Full reset
             currentStage = 1;
             enemiesDefeatedThisStage = 0;
             hasBoss = false;
             player.health = 100;
             player.maxHealth = 100;
             player.strength = 1;
+            player.worldX = 300;
             score = 0;
             difficulty = 1;
             spawnRate = 1100;
+            worldScroll = 0;
             projectiles = [];
             enemies = [];
             particles = [];
@@ -996,8 +915,6 @@
             lastSpawn = Date.now();
             attackCooldown = 0;
             shieldActive = false;
-            shieldTime = 0;
-            shieldCooldown = 0;
             
             updateScore();
             updateHealth();
@@ -1007,8 +924,7 @@
             paused = false;
             
             if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-            
-            spawnEnemy(); // first wave
+            spawnEnemy();
         }
         
         function advanceStage() {
@@ -1020,7 +936,6 @@
                 return;
             }
             
-            // GROW STRENGTH
             player.strength += 0.4;
             player.maxHealth += 32;
             player.health = player.maxHealth;
@@ -1031,13 +946,11 @@
             enemiesDefeatedThisStage = 0;
             hasBoss = false;
             
-            // Stage clear message
-            const data = stageData[currentStage - 2]; // previous king
+            const data = stageData[currentStage - 2];
             stageClearMessage.text = `KING ${data.king} DEFEATED!`;
             stageClearMessage.timer = 110;
             stageClearMessage.active = true;
             
-            // Optional: clear small enemies for clean transition
             enemies = enemies.filter(e => e.isBoss);
         }
         
@@ -1045,12 +958,9 @@
             gameRunning = false;
             const finalText = document.getElementById('final-score-text');
             finalText.innerHTML = `FINAL SCORE<br><span style="font-size:42px">${Math.floor(score)}</span>`;
-            
             document.getElementById('kingdoms-reached').innerHTML = `KINGDOMS CONQUERED: <strong>${currentStage - 1}/5</strong>`;
-            
             const factEl = document.getElementById('game-over-fact');
             factEl.innerHTML = `<strong>LEGACY:</strong> ${facts[Math.floor(Math.random() * facts.length)]}`;
-            
             document.getElementById('game-over-screen').classList.add('active');
         }
         
@@ -1066,9 +976,7 @@
             startGame();
         }
         
-        function hideStageClear() {
-            // Not needed anymore — message is on canvas
-        }
+        function hideStageClear() { }
         
         function togglePause() {
             if (!gameRunning) return;
@@ -1084,26 +992,20 @@
             document.getElementById('start-screen').classList.add('active');
         }
         
-        // COMBAT MOVES
         function doStab() {
             if (attackCooldown > 0) return;
             attackCooldown = 22;
             playerIsStabbing = 12;
             playSound('stab');
             
-            let hits = 0;
             for (let i = enemies.length - 1; i >= 0; i--) {
                 const e = enemies[i];
-                if (e.x < player.x + 105 && e.x > player.x - 10 && Math.abs(e.y - player.y) < 75) {
+                const eScreen = getScreenX(e.worldX);
+                if (eScreen < player.screenX + 115 && eScreen > player.screenX - 20 && Math.abs(e.y - player.y) < 80) {
                     e.health -= 32 * player.strength;
                     e.hit = true;
-                    hits++;
-                    for (let k = 0; k < 18; k++) {
-                        particles.push({x: e.x + 35, y: e.y + 38, vx: Math.random()*6-3, vy: Math.random()*6-8, life: 0.9, size: 6, color: '#8B0000'});
-                    }
-                    if (e.health <= 0) {
-                        handleEnemyDeath(e, i);
-                    }
+                    for (let k = 0; k < 18; k++) particles.push({x: eScreen + 35, y: e.y + 38, vx: Math.random()*6-3, vy: Math.random()*6-8, life: 0.9, size: 6, color: '#8B0000'});
+                    if (e.health <= 0) handleEnemyDeath(e, i);
                 }
             }
         }
@@ -1116,14 +1018,13 @@
             
             for (let i = enemies.length - 1; i >= 0; i--) {
                 const e = enemies[i];
-                if (Math.hypot(e.x - player.x - 30, e.y - player.y - 30) < 95) {
+                const eScreen = getScreenX(e.worldX);
+                if (Math.hypot(eScreen - player.screenX - 30, e.y - player.y - 30) < 95) {
                     e.health -= 18 * player.strength;
-                    e.x += 95; // massive knockback
+                    e.worldX += 110;
                     e.speed = Math.max(0.8, e.speed * -0.6);
                     e.hit = true;
-                    for (let k = 0; k < 12; k++) {
-                        particles.push({x: e.x + 20, y: e.y + 55, vx: Math.random()*12, vy: Math.random()*-3, life: 0.7, size: 4, color: '#eedd99'});
-                    }
+                    for (let k = 0; k < 12; k++) particles.push({x: eScreen + 20, y: e.y + 55, vx: Math.random()*12, vy: Math.random()*-3, life: 0.7, size: 4, color: '#eedd99'});
                     if (e.health <= 0) handleEnemyDeath(e, i);
                 }
             }
@@ -1132,51 +1033,45 @@
         function activateShield() {
             if (shieldCooldown > 0) return;
             shieldActive = true;
-            shieldTime = 210; // ~3.5 seconds
+            shieldTime = 210;
             shieldCooldown = 340;
             playSound('shield');
         }
         
-        // Input
         function handleMouseMove(e) {
             const rect = canvas.getBoundingClientRect();
             mouseY = e.clientY - rect.top;
+            player.y = Math.max(130, Math.min(canvas.height - 140, mouseY));
         }
         
         function handleClick(e) {
-            if (!gameRunning || paused) return;
-            if (e.button === 0) { // left click = throw
-                const rect = canvas.getBoundingClientRect();
-                const clickY = e.clientY - rect.top;
-                const dy = (clickY - player.y - 32) * 0.35;
-                
-                projectiles.push({
-                    x: player.x + 112,
-                    y: player.y + 26,
-                    vx: 15.5,
-                    vy: dy,
-                    width: 38,
-                    height: 9
-                });
-                playSound('throw');
-            }
+            if (!gameRunning || paused || e.button !== 0) return;
+            const rect = canvas.getBoundingClientRect();
+            const clickY = e.clientY - rect.top;
+            const dy = (clickY - player.y - 32) * 0.35;
+            
+            projectiles.push({
+                worldX: player.worldX + 112,
+                y: player.y + 26,
+                vx: 15.5,
+                vy: dy,
+                screenX: player.screenX + 112
+            });
+            playSound('throw');
         }
         
         function handleKeyDown(e) {
-            if (e.key === 'Escape' && gameRunning) {
-                e.preventDefault();
-                togglePause();
-                return;
-            }
+            keys[e.key.toLowerCase()] = true;
+            if (e.key === 'Escape' && gameRunning) { e.preventDefault(); togglePause(); return; }
             if (!gameRunning || paused) return;
             
             if (e.key.toLowerCase() === 's') doStab();
             if (e.key.toLowerCase() === 'k') doKick();
             if (e.key.toLowerCase() === 'h') activateShield();
-            
-            // Arrow backup
-            if (e.key === 'ArrowUp' || e.key.toLowerCase() === 'w') mouseY = Math.max(130, mouseY - 50);
-            if (e.key === 'ArrowDown' || e.key.toLowerCase() === 's') mouseY = Math.min(canvas.height - 140, mouseY + 50);
+        }
+        
+        function handleKeyUp(e) {
+            keys[e.key.toLowerCase()] = false;
         }
         
         function init() {
@@ -1186,8 +1081,9 @@
             canvas.addEventListener('mousemove', handleMouseMove);
             canvas.addEventListener('mousedown', handleClick);
             window.addEventListener('keydown', handleKeyDown);
+            window.addEventListener('keyup', handleKeyUp);
             
-            console.log('%c✅ Shaka Zulu: Iklwa Empire v2 READY — 5 stages, 5 kings, full attack moves, day/night, houses, fires & civilians!', 'color:#DAA520; font-family:monospace; font-size:13px');
+            console.log('%c✅ Shaka Zulu: Iklwa Empire v3 READY — REAL side-scrolling warrior combat!', 'color:#DAA520; font-family:monospace; font-size:13px');
         }
         
         window.onload = init;
@@ -1195,3 +1091,7 @@
 </body>
 </html>
 ```
+
+Just paste the whole thing into a new file called **index.html** and open it in your browser (or upload to GitHub Pages).  
+
+Let me know if you want any last tweaks! 🛡️
