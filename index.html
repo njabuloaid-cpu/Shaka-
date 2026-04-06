@@ -6,155 +6,22 @@
     <title>Shaka Zulu: Iklwa Empire • 3D</title>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
-        
-        :root {
-            --zulu-red: #8B0000;
-            --zulu-gold: #DAA520;
-            --zulu-green: #006400;
-        }
-        
-        body {
-            margin: 0;
-            padding: 0;
-            background: #000;
-            color: #fff;
-            font-family: 'Press Start 2P', system-ui;
-            overflow: hidden;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            height: 100vh;
-        }
-        
-        header {
-            width: 100%;
-            max-width: 900px;
-            background: var(--zulu-red);
-            padding: 10px 20px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5);
-            z-index: 10;
-        }
-        
-        .title {
-            font-size: 24px;
-            letter-spacing: 4px;
-            text-shadow: 3px 3px 0 #000;
-        }
-        
-        .stats {
-            display: flex;
-            gap: 15px;
-            font-size: 14px;
-        }
-        
-        .stat {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-        
-        .health-bar {
-            width: 140px;
-            height: 20px;
-            background: #222;
-            border: 3px solid var(--zulu-gold);
-            position: relative;
-            overflow: hidden;
-        }
-        
-        .health-fill {
-            height: 100%;
-            background: linear-gradient(#00ff00, #00cc00);
-            transition: width 0.3s;
-        }
-        
-        #canvas {
-            border: 8px solid var(--zulu-gold);
-            border-radius: 8px;
-            box-shadow: 0 0 30px rgba(218, 165, 32, 0.6);
-            background: #111;
-            width: 900px;
-            height: 500px;
-        }
-        
-        .overlay {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.9);
-            display: none;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            z-index: 100;
-            text-align: center;
-            padding: 20px;
-            box-sizing: border-box;
-        }
-        
-        .overlay.active {
-            display: flex;
-        }
-        
-        .overlay h1 {
-            font-size: 48px;
-            color: var(--zulu-gold);
-            text-shadow: 6px 6px 0 var(--zulu-red);
-            margin-bottom: 10px;
-            letter-spacing: 8px;
-        }
-        
-        button {
-            font-family: 'Press Start 2P', system-ui;
-            font-size: 20px;
-            padding: 15px 40px;
-            background: var(--zulu-red);
-            color: #fff;
-            border: 6px solid var(--zulu-gold);
-            cursor: pointer;
-            margin-top: 20px;
-            box-shadow: 0 6px 0 #000;
-            transition: all 0.1s;
-        }
-        
-        button:hover {
-            transform: translateY(-4px);
-            box-shadow: 0 10px 0 #000;
-        }
-        
-        .fact {
-            font-size: 14px;
-            max-width: 520px;
-            background: rgba(255,255,255,0.1);
-            padding: 15px;
-            border-left: 6px solid var(--zulu-gold);
-            margin-top: 30px;
-        }
-        
-        .instructions {
-            position: absolute;
-            bottom: 20px;
-            left: 20px;
-            background: rgba(0,0,0,0.6);
-            padding: 10px 15px;
-            font-size: 13px;
-            border: 3px solid var(--zulu-gold);
-            pointer-events: none;
-        }
-        
-        footer {
-            width: 100%;
-            max-width: 900px;
-            padding: 10px;
-            text-align: center;
-            font-size: 12px;
-            opacity: 0.7;
-        }
+        :root { --zulu-red: #8B0000; --zulu-gold: #DAA520; }
+        body { margin:0; padding:0; background:#000; color:#fff; font-family:'Press Start 2P',system-ui; overflow:hidden; display:flex; flex-direction:column; align-items:center; height:100vh; }
+        header { width:100%; max-width:900px; background:var(--zulu-red); padding:10px 20px; display:flex; justify-content:space-between; align-items:center; box-shadow:0 4px 10px rgba(0,0,0,0.5); z-index:10; }
+        .title { font-size:24px; letter-spacing:4px; text-shadow:3px 3px 0 #000; }
+        .stats { display:flex; gap:15px; font-size:14px; }
+        .health-bar { width:140px; height:20px; background:#222; border:3px solid var(--zulu-gold); position:relative; overflow:hidden; }
+        .health-fill { height:100%; background:linear-gradient(#00ff00,#00cc00); transition:width 0.3s; }
+        #canvas { border:8px solid var(--zulu-gold); border-radius:8px; box-shadow:0 0 30px rgba(218,165,32,0.6); background:#111; width:900px; height:500px; }
+        .overlay { position:absolute; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.9); display:none; flex-direction:column; align-items:center; justify-content:center; z-index:100; text-align:center; padding:20px; box-sizing:border-box; }
+        .overlay.active { display:flex; }
+        .overlay h1 { font-size:48px; color:var(--zulu-gold); text-shadow:6px 6px 0 var(--zulu-red); margin-bottom:10px; letter-spacing:8px; }
+        button { font-family:'Press Start 2P',system-ui; font-size:20px; padding:15px 40px; background:var(--zulu-red); color:#fff; border:6px solid var(--zulu-gold); cursor:pointer; margin-top:20px; box-shadow:0 6px 0 #000; transition:all 0.1s; }
+        button:hover { transform:translateY(-4px); box-shadow:0 10px 0 #000; }
+        .fact { font-size:14px; max-width:520px; background:rgba(255,255,255,0.1); padding:15px; border-left:6px solid var(--zulu-gold); margin-top:30px; }
+        .instructions { position:absolute; bottom:20px; left:20px; background:rgba(0,0,0,0.7); padding:10px 15px; font-size:13px; border:3px solid var(--zulu-gold); pointer-events:none; line-height:1.4; }
+        footer { width:100%; max-width:900px; padding:10px; text-align:center; font-size:12px; opacity:0.7; }
     </style>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r134/three.min.js"></script>
 </head>
@@ -162,587 +29,647 @@
     <header>
         <div class="title">SHAKA ZULU • 3D</div>
         <div class="stats">
-            <div class="stat">
-                <span>SCORE</span>
-                <span id="score" style="color: var(--zulu-gold); font-size: 22px;">00000</span>
-            </div>
-            <div class="stat">
-                <span>HEALTH</span>
-                <div class="health-bar">
-                    <div id="health-fill" class="health-fill" style="width: 100%"></div>
-                </div>
-            </div>
-            <div class="stat">
-                <span>HIGH</span>
-                <span id="highscore" style="color: var(--zulu-gold); font-size: 22px;">00000</span>
-            </div>
-            <div class="stat" style="font-size:13px; color:var(--zulu-gold);">
-                STAGE <span id="stage-ui">1/5</span><br>
-                <span id="kingdom-ui" style="font-size:12px; opacity:0.8;">NDWANDWE HILLS</span>
-            </div>
+            <div class="stat"><span>SCORE</span><span id="score" style="color:var(--zulu-gold);font-size:22px;">00000</span></div>
+            <div class="stat"><span>HEALTH</span><div class="health-bar"><div id="health-fill" class="health-fill" style="width:100%"></div></div></div>
+            <div class="stat"><span>HIGH</span><span id="highscore" style="color:var(--zulu-gold);font-size:22px;">00000</span></div>
+            <div class="stat" style="font-size:13px;color:var(--zulu-gold);">STAGE <span id="stage-ui">1/5</span><br><span id="kingdom-ui" style="font-size:12px;opacity:0.8;">NDWANDWE HILLS</span></div>
+            <div class="stat" style="font-size:13px;color:#ffcc44;" id="weapon-ui">WEAPON: IKLWA</div>
         </div>
     </header>
 
     <canvas id="canvas" width="900" height="500"></canvas>
 
     <div class="instructions" id="instructions">
-        WASD / Arrow Keys = Walk / Run<br>
-        MOUSE = Look around + Aim<br>
-        LEFT CLICK = Throw Iklwa / Stab<br>
-        SPACE = Shield Block<br>
+        WASD / Arrows = Walk / Run<br>
         SHIFT = Sprint<br>
+        SPACE = Jump<br>
+        MOUSE = Look + Aim (click canvas to lock)<br>
+        LEFT CLICK = Throw Iklwa / Attack<br>
+        S = Stab (melee thrust)<br>
+        K = Kick (knockback)<br>
+        H = iHawu Shield Block<br>
         ESC = Pause
     </div>
 
-    <!-- Start Screen -->
     <div id="start-screen" class="overlay active">
         <h1>SHAKA ZULU</h1>
-        <h2>3D IK LWA WARRIOR</h2>
-        <p>You are Shaka — the greatest warrior king.<br>Freely explore 3D battlefields. Conquer 5 kingdoms with real combat.</p>
-        
-        <button onclick="startGame()">ENTER THE BATTLEFIELD</button>
-        
-        <div class="fact">
-            <strong>God of War style combat in your browser!</strong><br>
-            Walk, run, fight, block, throw — fully 3D terrain + landmarks change every stage.
-        </div>
+        <h2>3D WARRIOR LEGEND</h2>
+        <p>You are Shaka — walk the real Zulu lands.<br>Jump mountains, fight giants, collect legendary weapons.</p>
+        <button onclick="startGame()">BEGIN THE CONQUEST</button>
+        <div class="fact">God of War style 3D combat • Realistic terrains with rivers, mountains, animals &amp; trees • Melee + ranged + jump + collectibles</div>
     </div>
 
-    <!-- Game Over -->
     <div id="game-over-screen" class="overlay">
         <h1>GAME OVER</h1>
-        <p id="final-score-text" style="font-size: 24px; color: var(--zulu-gold);"></p>
+        <p id="final-score-text" style="font-size:24px;color:var(--zulu-gold);"></p>
         <p id="kingdoms-reached" style="color:#ffcc44;"></p>
         <button onclick="restartGame()">REBUILD THE EMPIRE</button>
     </div>
 
-    <!-- Victory -->
-    <div id="victory-screen" class="overlay" style="background: linear-gradient(rgba(0,50,0,0.9), rgba(139,0,0,0.9));">
-        <h1 style="color:#ffcc44; font-size:54px;">ZULU EMPIRE UNITED!</h1>
-        <p id="victory-score" style="font-size:32px; color:var(--zulu-gold);"></p>
-        <button onclick="restartGame()" style="background:#006400;">PLAY AGAIN</button>
+    <div id="victory-screen" class="overlay" style="background:linear-gradient(rgba(0,50,0,0.9),rgba(139,0,0,0.9));">
+        <h1 style="color:#ffcc44;font-size:54px;">ZULU EMPIRE UNITED!</h1>
+        <p id="victory-score" style="font-size:32px;color:var(--zulu-gold);"></p>
+        <button onclick="restartGame()" style="background:#006400;">PLAY AGAIN — NEW LEGEND</button>
     </div>
 
-    <!-- Pause -->
-    <div id="pause-screen" class="overlay" style="background: rgba(0,0,0,0.95);">
+    <div id="pause-screen" class="overlay" style="background:rgba(0,0,0,0.95);">
         <h1>PAUSED</h1>
-        <button onclick="togglePause()">RESUME</button>
-        <button onclick="quitToMenu()" style="margin-top:15px; background:#444;">RETURN TO KRAAL</button>
+        <button onclick="togglePause()">RESUME CONQUEST</button>
+        <button onclick="quitToMenu()" style="margin-top:15px;background:#444;">RETURN TO KRAAL</button>
     </div>
 
-    <footer>
-        Single-file 3D HTML game using Three.js • God of War style free movement • Paste as index.html on GitHub Pages
-    </footer>
+    <footer>Fully 3D single-file HTML game • Realistic Zulu warrior with arms/legs animation • Jump + collect weapons + giant enemies + rivers/mountains/animals • Paste as index.html</footer>
 
     <script>
-        // Three.js setup
-        let scene, camera, renderer;
-        let player, playerGroup;
-        let enemies = [];
-        let projectiles = [];
-        let particles = [];
-        let score = 0;
-        let highScore = localStorage.getItem('shaka3DHighScore') || 0;
-        let gameRunning = false;
-        let paused = false;
-        let currentStage = 1;
+        let scene, camera, renderer, playerGroup, player;
+        let enemies = [], projectiles = [], particles = [], collectibles = [];
+        let score = 0, highScore = localStorage.getItem('shaka3DHighScore') || 0;
+        let gameRunning = false, paused = false, currentStage = 1;
         const maxStages = 5;
-        
-        // Stage data with different terrains / landmarks
-        const stageData = [
-            { name: "NDWANDWE HILLS", color: 0x2e5c2e, landmarkColor: 0x8B4513, sunColor: 0xffcc44 },
-            { name: "QWABE VALLEY", color: 0x3d6c3d, landmarkColor: 0xDAA520, sunColor: 0xffee88 },
-            { name: "CHUNU PLAINS", color: 0x4a7a4a, landmarkColor: 0xaa5522, sunColor: 0xffaa66 },
-            { name: "HLUBI RIVER", color: 0x112233, landmarkColor: 0x557788, sunColor: 0xaaaaaa },
-            { name: "FINAL CONQUEST", color: 0x1a3d1a, landmarkColor: 0xffcc44, sunColor: 0xffeeaa }
-        ];
-        
-        // Controls
-        let keys = {};
-        let moveSpeed = 0.3;
-        let sprint = false;
-        let velocity = new THREE.Vector3();
-        let yaw = 0; // mouse look
-        
-        // Combat
-        let attackCooldown = 0;
-        let shieldActive = false;
-        let shieldTime = 0;
-        
-        // Audio (simple)
+        let keys = {}, yaw = 0, pitch = 0, attackCooldown = 0, shieldActive = false, shieldTime = 0;
+        let velocityY = 0, isJumping = false;
+        let currentWeapon = "IKLWA"; // can become "BUFFALO AXE", "WAR SPEAR", etc.
         let audioCtx;
-        
+
+        const stageData = [
+            {name:"NDWANDWE HILLS", ground:0x2e5c2e, sky:0x5c8a5c, river:false, mountain:true, animals:true},
+            {name:"QWABE VALLEY", ground:0x3d6c3d, sky:0xaa5522, river:true, mountain:false, animals:true},
+            {name:"CHUNU PLAINS", ground:0x4a7a4a, sky:0xffcc88, river:false, mountain:true, animals:false},
+            {name:"HLUBI RIVER", ground:0x112233, sky:0x557788, river:true, mountain:true, animals:true},
+            {name:"FINAL CONQUEST", ground:0x1a3d1a, sky:0xffeeaa, river:true, mountain:true, animals:true}
+        ];
+
         function playSound(type) {
             if (!audioCtx) return;
             const osc = audioCtx.createOscillator();
             const gain = audioCtx.createGain();
-            osc.connect(gain);
-            gain.connect(audioCtx.destination);
-            if (type === 'stab') { osc.frequency.setValueAtTime(320, audioCtx.currentTime); gain.gain.value = 0.4; osc.type = 'square'; }
-            else if (type === 'throw') { osc.frequency.setValueAtTime(160, audioCtx.currentTime); gain.gain.value = 0.3; osc.type = 'sawtooth'; }
-            else if (type === 'hit') { osc.frequency.setValueAtTime(420, audioCtx.currentTime); gain.gain.value = 0.5; osc.type = 'square'; }
-            osc.start();
-            setTimeout(() => osc.stop(), type === 'hit' ? 120 : 80);
+            osc.connect(gain); gain.connect(audioCtx.destination);
+            if (type==='throw') { osc.frequency.setValueAtTime(160,audioCtx.currentTime); gain.gain.value=0.3; osc.type='sawtooth'; }
+            else if (type==='stab') { osc.frequency.setValueAtTime(320,audioCtx.currentTime); gain.gain.value=0.5; osc.type='square'; }
+            else if (type==='kick') { osc.frequency.setValueAtTime(120,audioCtx.currentTime); gain.gain.value=0.6; osc.type='sine'; }
+            else if (type==='hit') { osc.frequency.setValueAtTime(420,audioCtx.currentTime); gain.gain.value=0.5; osc.type='square'; }
+            else if (type==='jump') { osc.frequency.setValueAtTime(220,audioCtx.currentTime); gain.gain.value=0.2; osc.type='triangle'; }
+            osc.start(); setTimeout(()=>osc.stop(), 120);
         }
-        
+
         function initThree() {
             const canvas = document.getElementById('canvas');
-            renderer = new THREE.WebGLRenderer({ canvas: canvas, antialias: true });
-            renderer.setSize(900, 500);
+            renderer = new THREE.WebGLRenderer({canvas, antialias:true});
+            renderer.setSize(900,500);
             renderer.shadowMap.enabled = true;
-            
+
             scene = new THREE.Scene();
-            scene.fog = new THREE.Fog(0x112211, 30, 120);
-            
-            camera = new THREE.PerspectiveCamera(70, 900 / 500, 0.1, 200);
-            
-            // Lights
-            const ambient = new THREE.AmbientLight(0xaaaaaa, 0.6);
+            scene.fog = new THREE.Fog(0x112211, 40, 160);
+
+            camera = new THREE.PerspectiveCamera(70, 900/500, 0.1, 300);
+
+            const ambient = new THREE.AmbientLight(0xaaaaaa, 0.8);
             scene.add(ambient);
-            const sun = new THREE.DirectionalLight(0xffffff, 1.2);
-            sun.position.set(50, 80, 30);
+            const sun = new THREE.DirectionalLight(0xffffff, 1.4);
+            sun.position.set(50, 90, 40);
             sun.castShadow = true;
             scene.add(sun);
-            
-            // Player (Shaka)
+
+            // Detailed Shaka model with arms + legs
             playerGroup = new THREE.Group();
             scene.add(playerGroup);
-            
-            // Body
-            const bodyGeo = new THREE.CylinderGeometry(0.6, 0.8, 2.2, 8);
-            const bodyMat = new THREE.MeshPhongMaterial({ color: 0x3d2b1f });
-            const body = new THREE.Mesh(bodyGeo, bodyMat);
-            body.castShadow = true;
-            body.position.y = 1.8;
-            playerGroup.add(body);
-            
-            // Head
-            const headGeo = new THREE.SphereGeometry(0.7, 16, 16);
-            const headMat = new THREE.MeshPhongMaterial({ color: 0xd2a679 });
-            const head = new THREE.Mesh(headGeo, headMat);
+
+            // Torso
+            const torso = new THREE.Mesh(new THREE.CylinderGeometry(0.6, 0.8, 2.2, 8), new THREE.MeshPhongMaterial({color:0x3d2b1f}));
+            torso.position.y = 2.1;
+            torso.castShadow = true;
+            playerGroup.add(torso);
+
+            // Head + feather
+            const head = new THREE.Mesh(new THREE.SphereGeometry(0.7, 16, 16), new THREE.MeshPhongMaterial({color:0xd2a679}));
+            head.position.y = 3.8;
             head.castShadow = true;
-            head.position.y = 3.4;
             playerGroup.add(head);
-            
-            // Spear (iklwa)
-            const spearGeo = new THREE.BoxGeometry(0.15, 0.15, 4);
-            const spearMat = new THREE.MeshPhongMaterial({ color: 0x3d2b1f });
-            const spear = new THREE.Mesh(spearGeo, spearMat);
-            spear.position.set(0, 2.2, 2);
-            spear.rotation.x = Math.PI / 2;
+            const feather = new THREE.Mesh(new THREE.ConeGeometry(0.2, 1.2, 4), new THREE.MeshPhongMaterial({color:0xffffff}));
+            feather.position.set(0.6, 4.4, 0);
+            feather.rotation.z = Math.PI / 3;
+            playerGroup.add(feather);
+
+            // Left arm (for shield)
+            const leftArm = new THREE.Mesh(new THREE.CylinderGeometry(0.2, 0.25, 1.6, 6), new THREE.MeshPhongMaterial({color:0x3d2b1f}));
+            leftArm.position.set(-0.9, 2.6, 0);
+            leftArm.rotation.z = Math.PI / 3;
+            playerGroup.add(leftArm);
+            const leftHand = new THREE.Mesh(new THREE.SphereGeometry(0.3, 8, 8), new THREE.MeshPhongMaterial({color:0xd2a679}));
+            leftHand.position.set(-1.4, 1.8, 0);
+            playerGroup.add(leftHand);
+
+            // Right arm (for spear)
+            const rightArm = new THREE.Mesh(new THREE.CylinderGeometry(0.2, 0.25, 1.6, 6), new THREE.MeshPhongMaterial({color:0x3d2b1f}));
+            rightArm.position.set(0.9, 2.6, 0);
+            rightArm.rotation.z = -Math.PI / 3;
+            playerGroup.add(rightArm);
+            const rightHand = new THREE.Mesh(new THREE.SphereGeometry(0.3, 8, 8), new THREE.MeshPhongMaterial({color:0xd2a679}));
+            rightHand.position.set(1.4, 1.8, 0);
+            playerGroup.add(rightHand);
+
+            // Legs
+            const leftLeg = new THREE.Mesh(new THREE.CylinderGeometry(0.25, 0.3, 1.8, 6), new THREE.MeshPhongMaterial({color:0x3d2b1f}));
+            leftLeg.position.set(-0.4, 0.9, 0);
+            playerGroup.add(leftLeg);
+            const rightLeg = new THREE.Mesh(new THREE.CylinderGeometry(0.25, 0.3, 1.8, 6), new THREE.MeshPhongMaterial({color:0x3d2b1f}));
+            rightLeg.position.set(0.4, 0.9, 0);
+            playerGroup.add(rightLeg);
+
+            // Iklwa spear (held in right hand)
+            const spear = new THREE.Mesh(new THREE.BoxGeometry(0.15, 0.15, 4.5), new THREE.MeshPhongMaterial({color:0x3d2b1f}));
+            spear.position.set(1.4, 2.4, 1.2);
+            spear.rotation.set(0.8, 0, 0);
             playerGroup.add(spear);
-            
-            // Shield (iHawu)
-            const shieldGeo = new THREE.PlaneGeometry(1.8, 2.2);
-            const shieldMat = new THREE.MeshPhongMaterial({ color: 0xd2a679, side: THREE.DoubleSide });
-            const shield = new THREE.Mesh(shieldGeo, shieldMat);
-            shield.position.set(1.4, 2.1, 0.4);
-            shield.rotation.y = Math.PI / 2.5;
+
+            // iHawu shield (left hand)
+            const shieldGeo = new THREE.PlaneGeometry(1.9, 2.4);
+            const shield = new THREE.Mesh(shieldGeo, new THREE.MeshPhongMaterial({color:0xd2a679, side:THREE.DoubleSide}));
+            shield.position.set(-1.6, 2.4, 0.6);
+            shield.rotation.y = Math.PI / 2.8;
             playerGroup.add(shield);
-            
-            player = playerGroup; // reference
-            
-            // Ground will be created per stage
+
+            player = playerGroup;
+            player.userData = { health: 100, weaponDamage: 1 };
             return true;
         }
-        
-        let currentGround = null;
-        let currentLandmarks = [];
-        
+
+        let currentGround = null, currentRiver = null, currentMountains = [], currentTrees = [], currentAnimals = [];
         function createStage(stage) {
-            // Remove old terrain
+            // Clean old objects
             if (currentGround) scene.remove(currentGround);
-            currentLandmarks.forEach(l => scene.remove(l));
-            currentLandmarks = [];
-            
-            const data = stageData[stage - 1];
-            
-            // Large terrain plane with slight height variation
-            const terrainGeo = new THREE.PlaneGeometry(200, 200, 32, 32);
-            const terrainMat = new THREE.MeshPhongMaterial({ 
-                color: data.color,
-                shininess: 5,
-                flatShading: true
-            });
+            if (currentRiver) scene.remove(currentRiver);
+            currentMountains.forEach(m => scene.remove(m));
+            currentTrees.forEach(t => scene.remove(t));
+            currentAnimals.forEach(a => scene.remove(a));
+            currentMountains = []; currentTrees = []; currentAnimals = [];
+
+            const data = stageData[stage-1];
+
+            // Enhanced terrain with hills
+            const terrainGeo = new THREE.PlaneGeometry(260, 260, 64, 64);
+            const terrainMat = new THREE.MeshPhongMaterial({color: data.ground, flatShading: true});
             currentGround = new THREE.Mesh(terrainGeo, terrainMat);
             currentGround.rotation.x = -Math.PI / 2;
             currentGround.receiveShadow = true;
             scene.add(currentGround);
-            
-            // Simple height variation (good terrain feel)
-            const vertices = currentGround.geometry.attributes.position.array;
-            for (let i = 2; i < vertices.length; i += 3) {
-                vertices[i] = Math.random() * 1.8 - 0.6; // gentle hills
+
+            const verts = currentGround.geometry.attributes.position.array;
+            for (let i = 2; i < verts.length; i += 3) {
+                const x = verts[i-2], z = verts[i-1];
+                verts[i] = Math.sin(x/18) * 3.5 + Math.cos(z/14) * 2.8 + Math.random() * 0.8;
             }
             currentGround.geometry.attributes.position.needsUpdate = true;
             currentGround.geometry.computeVertexNormals();
-            
-            // Landmarks (different every stage)
-            for (let i = 0; i < 12; i++) {
-                // Hills / rocks
-                const size = 3 + Math.random() * 6;
-                const landmark = new THREE.Mesh(
-                    new THREE.BoxGeometry(size, size * 0.6 + 2, size),
-                    new THREE.MeshPhongMaterial({ color: data.landmarkColor })
+
+            // River (if stage has one)
+            if (data.river) {
+                currentRiver = new THREE.Mesh(
+                    new THREE.PlaneGeometry(260, 18),
+                    new THREE.MeshPhongMaterial({color: 0x2288ff, shininess: 80})
                 );
-                landmark.position.set(
-                    (Math.random() - 0.5) * 140,
-                    size * 0.4,
-                    (Math.random() - 0.5) * 140
-                );
-                landmark.castShadow = true;
-                landmark.receiveShadow = true;
-                scene.add(landmark);
-                currentLandmarks.push(landmark);
-                
-                // Trees / kraal posts (simple)
-                if (Math.random() > 0.6) {
-                    const trunk = new THREE.Mesh(
-                        new THREE.CylinderGeometry(0.6, 0.8, 6, 6),
-                        new THREE.MeshPhongMaterial({ color: 0x8B4513 })
+                currentRiver.rotation.x = -Math.PI / 2;
+                currentRiver.position.set(0, 0.3, -40);
+                scene.add(currentRiver);
+            }
+
+            // Mountains (background cones)
+            if (data.mountain) {
+                for (let i = 0; i < 6; i++) {
+                    const m = new THREE.Mesh(
+                        new THREE.ConeGeometry(18 + Math.random()*12, 45 + Math.random()*20, 6),
+                        new THREE.MeshPhongMaterial({color: 0x555555})
                     );
-                    trunk.position.copy(landmark.position);
-                    trunk.position.y += 4;
-                    scene.add(trunk);
-                    currentLandmarks.push(trunk);
+                    m.position.set((Math.random()-0.5)*220, 20, -120 - Math.random()*60);
+                    m.rotation.y = Math.random()*Math.PI;
+                    scene.add(m);
+                    currentMountains.push(m);
                 }
             }
-            
-            // Update sun color
-            const sun = scene.children.find(obj => obj instanceof THREE.DirectionalLight);
-            if (sun) sun.color.setHex(data.sunColor);
-            
+
+            // Trees
+            for (let i = 0; i < 28; i++) {
+                const trunk = new THREE.Mesh(new THREE.CylinderGeometry(1.2, 1.6, 9, 6), new THREE.MeshPhongMaterial({color:0x8B4513}));
+                trunk.position.set((Math.random()-0.5)*200, 4.5, (Math.random()-0.5)*200);
+                trunk.castShadow = true;
+                scene.add(trunk);
+                currentTrees.push(trunk);
+
+                const foliage = new THREE.Mesh(new THREE.ConeGeometry(5, 12, 6), new THREE.MeshPhongMaterial({color:0x006400}));
+                foliage.position.set(trunk.position.x, 14, trunk.position.z);
+                foliage.castShadow = true;
+                scene.add(foliage);
+                currentTrees.push(foliage);
+            }
+
+            // Animals (simple impala / cow models)
+            if (data.animals) {
+                for (let i = 0; i < 8; i++) {
+                    const animal = new THREE.Group();
+                    const body = new THREE.Mesh(new THREE.BoxGeometry(4, 2.5, 8), new THREE.MeshPhongMaterial({color:0x8B5A2B}));
+                    body.position.y = 3;
+                    animal.add(body);
+                    const head = new THREE.Mesh(new THREE.SphereGeometry(1.4, 8, 8), new THREE.MeshPhongMaterial({color:0xd2a679}));
+                    head.position.set(0, 3.5, -4);
+                    animal.add(head);
+                    animal.position.set((Math.random()-0.5)*180, 0, (Math.random()-0.5)*160);
+                    animal.rotation.y = Math.random()*Math.PI;
+                    scene.add(animal);
+                    currentAnimals.push(animal);
+                }
+            }
+
+            // Sky / fog update
+            scene.fog.color.setHex(data.sky);
+
             document.getElementById('kingdom-ui').textContent = data.name;
         }
-        
-        function spawnEnemy() {
-            const enemyGroup = new THREE.Group();
-            
-            // Enemy body
-            const body = new THREE.Mesh(
-                new THREE.CylinderGeometry(0.7, 0.9, 2.4, 8),
-                new THREE.MeshPhongMaterial({ color: 0x5c2a1a })
-            );
-            body.position.y = 1.9;
-            enemyGroup.add(body);
-            
-            // Enemy head
-            const head = new THREE.Mesh(
-                new THREE.SphereGeometry(0.65, 12, 12),
-                new THREE.MeshPhongMaterial({ color: 0xd2a679 })
-            );
-            head.position.y = 3.5;
-            enemyGroup.add(head);
-            
-            // Enemy spear
-            const spear = new THREE.Mesh(
-                new THREE.BoxGeometry(0.15, 0.15, 3.5),
-                new THREE.MeshPhongMaterial({ color: 0x3d2b1f })
-            );
-            spear.position.set(0, 2.3, 1.8);
+
+        function spawnEnemy(type = 'normal') {
+            const group = new THREE.Group();
+
+            // Base warrior body
+            const torso = new THREE.Mesh(new THREE.CylinderGeometry(0.8, 1.0, 2.6, 8), new THREE.MeshPhongMaterial({color: type==='giant' ? 0x5c2a1a : 0x4a2a1a}));
+            torso.position.y = 2.4;
+            group.add(torso);
+
+            const head = new THREE.Mesh(new THREE.SphereGeometry(0.75, 12, 12), new THREE.MeshPhongMaterial({color:0xd2a679}));
+            head.position.y = 4.1;
+            group.add(head);
+
+            // Spear
+            const spear = new THREE.Mesh(new THREE.BoxGeometry(0.18, 0.18, 4), new THREE.MeshPhongMaterial({color:0x3d2b1f}));
+            spear.position.set(0, 2.8, 1.8);
             spear.rotation.x = Math.PI / 2;
-            enemyGroup.add(spear);
-            
-            // Random position ahead of player
-            enemyGroup.position.set(
-                player.position.x + (Math.random() - 0.5) * 40 + 30,
-                0,
-                player.position.z + (Math.random() - 0.5) * 40 + 30
-            );
-            
-            enemyGroup.userData = {
-                health: currentStage === 5 ? 8 : 3,
-                speed: 0.12 + currentStage * 0.03,
-                isBoss: currentStage === 5 && Math.random() > 0.7
+            group.add(spear);
+
+            // If archer, replace spear with bow
+            if (type === 'archer') {
+                group.remove(spear);
+                const bow = new THREE.Mesh(new THREE.BoxGeometry(0.3, 2.8, 0.2), new THREE.MeshPhongMaterial({color:0x8B4513}));
+                bow.position.set(0, 3, 1);
+                bow.rotation.z = Math.PI / 2;
+                group.add(bow);
+                group.userData.isArcher = true;
+            }
+
+            if (type === 'giant') {
+                torso.scale.set(1.6, 1.6, 1.6);
+                head.scale.set(1.4, 1.4, 1.4);
+                group.userData.isGiant = true;
+            }
+
+            group.position.set(player.position.x + 45 + Math.random()*35, 0, player.position.z + (Math.random()-0.5)*50);
+            group.userData = {
+                health: type==='giant' ? 14 : (type==='archer' ? 4 : 3),
+                speed: type==='giant' ? 0.09 : (type==='archer' ? 0.16 : 0.18),
+                type: type
             };
-            
-            scene.add(enemyGroup);
-            enemies.push(enemyGroup);
+            scene.add(group);
+            enemies.push(group);
         }
-        
+
+        function spawnCollectible() {
+            const pickup = new THREE.Mesh(
+                new THREE.BoxGeometry(2, 2, 2),
+                new THREE.MeshPhongMaterial({color:0xffcc44, emissive:0xffaa00})
+            );
+            pickup.position.set(player.position.x + 30 + Math.random()*40, 6, player.position.z + (Math.random()-0.5)*40);
+            pickup.userData = {type: Math.random() > 0.5 ? 'axe' : 'warSpear'};
+            scene.add(pickup);
+            collectibles.push(pickup);
+        }
+
+        function getTerrainHeight(x, z) {
+            return Math.sin(x/18)*3.5 + Math.cos(z/14)*2.8;
+        }
+
         function updatePlayer() {
-            if (!player) return;
-            
-            velocity.set(0, 0, 0);
-            sprint = keys['shift'];
-            
-            const speed = sprint ? moveSpeed * 2.2 : moveSpeed;
-            
-            if (keys['w'] || keys['arrowup']) velocity.z = -speed;
-            if (keys['s'] || keys['arrowdown']) velocity.z = speed;
-            if (keys['a'] || keys['arrowleft']) velocity.x = -speed;
-            if (keys['d'] || keys['arrowright']) velocity.x = speed;
-            
-            // Rotate player to face movement direction (God of War style)
-            if (velocity.x !== 0 || velocity.z !== 0) {
-                const angle = Math.atan2(velocity.x, velocity.z);
-                player.rotation.y = angle + yaw;
+            const speed = keys['shift'] ? 0.72 : 0.35;
+            let vx = 0, vz = 0;
+            if (keys['w'] || keys['arrowup']) vz -= speed;
+            if (keys['s'] || keys['arrowdown']) vz += speed;
+            if (keys['a'] || keys['arrowleft']) vx -= speed;
+            if (keys['d'] || keys['arrowright']) vx += speed;
+
+            if (vx || vz) {
+                const moveAngle = Math.atan2(vx, vz);
+                player.rotation.y = moveAngle + yaw;
+                player.position.x += Math.sin(player.rotation.y) * speed * Math.hypot(vx, vz) * 1.4;
+                player.position.z += Math.cos(player.rotation.y) * speed * Math.hypot(vx, vz) * 1.4;
             }
-            
-            // Move in world space
-            player.position.x += velocity.x * Math.cos(player.rotation.y) - velocity.z * Math.sin(player.rotation.y);
-            player.position.z += velocity.x * Math.sin(player.rotation.y) + velocity.z * Math.cos(player.rotation.y);
-            
-            // Camera follows (third-person God of War style)
-            const cameraOffset = new THREE.Vector3(0, 12, 22);
-            cameraOffset.applyAxisAngle(new THREE.Vector3(0, 1, 0), yaw);
-            camera.position.copy(player.position).add(cameraOffset);
-            camera.lookAt(player.position.x, player.position.y + 3, player.position.z);
-        }
-        
-        function updateEnemies() {
-            for (let i = enemies.length - 1; i >= 0; i--) {
-                const e = enemies[i];
-                const dx = player.position.x - e.position.x;
-                const dz = player.position.z - e.position.z;
-                const dist = Math.sqrt(dx * dx + dz * dz);
-                
-                if (dist < 2.5) {
-                    // Attack player
-                    player.userData.health = (player.userData.health || 100) - (e.userData.isBoss ? 18 : 9);
-                    updateHealthUI();
-                    if (player.userData.health <= 0) endGame();
-                    scene.remove(e);
-                    enemies.splice(i, 1);
-                    continue;
-                }
-                
-                // Move toward player
-                const dirX = dx / dist;
-                const dirZ = dz / dist;
-                e.position.x += dirX * e.userData.speed;
-                e.position.z += dirZ * e.userData.speed;
-                
-                // Face player
-                e.rotation.y = Math.atan2(dx, dz);
-                
-                // Simple attack animation bob
-                e.children[0].position.y = 1.9 + Math.sin(Date.now() / 200) * 0.1;
+
+            // Jump physics
+            if (keys[' '] && !isJumping) {
+                velocityY = 1.1;
+                isJumping = true;
+                playSound('jump');
             }
+            velocityY -= 0.065; // gravity
+            player.position.y += velocityY;
+            const groundY = getTerrainHeight(player.position.x, player.position.z) + 0.1;
+            if (player.position.y <= groundY) {
+                player.position.y = groundY;
+                velocityY = 0;
+                isJumping = false;
+            }
+
+            // Camera
+            const camOffset = new THREE.Vector3(0, 14, 28);
+            camOffset.applyAxisAngle(new THREE.Vector3(0,1,0), yaw);
+            camera.position.copy(player.position).add(camOffset);
+            camera.lookAt(player.position.x, player.position.y + 4, player.position.z);
+
+            // Simple running animation on legs
+            const bob = Math.sin(Date.now()/120) * 0.4;
+            player.children[4].rotation.x = bob; // left leg
+            player.children[5].rotation.x = -bob; // right leg
         }
-        
-        function throwIklwa() {
+
+        function doStab() {
             if (attackCooldown > 0) return;
             attackCooldown = 18;
-            
-            const spear = new THREE.Mesh(
-                new THREE.BoxGeometry(0.2, 0.2, 4),
-                new THREE.MeshPhongMaterial({ color: 0xc0c0c0 })
-            );
+            playSound('stab');
+
+            // Arm thrust animation (temporary)
+            const rightArm = player.children[2];
+            if (rightArm) rightArm.rotation.z = -1.8;
+
+            setTimeout(() => { if (rightArm) rightArm.rotation.z = -Math.PI/3; }, 180);
+
+            for (let i = enemies.length-1; i>=0; i--) {
+                const e = enemies[i];
+                const dx = e.position.x - player.position.x;
+                const dz = e.position.z - player.position.z;
+                if (Math.sqrt(dx*dx + dz*dz) < 6) {
+                    e.userData.health -= 3 * player.userData.weaponDamage;
+                    if (e.userData.health <= 0) {
+                        score += e.userData.isGiant ? 220 : 70;
+                        updateScoreUI();
+                        scene.remove(e);
+                        enemies.splice(i,1);
+                        if (Math.random() > 0.7) spawnCollectible();
+                    }
+                    return;
+                }
+            }
+        }
+
+        function doKick() {
+            if (attackCooldown > 0) return;
+            attackCooldown = 24;
+            playSound('kick');
+
+            for (let i = enemies.length-1; i>=0; i--) {
+                const e = enemies[i];
+                const dx = e.position.x - player.position.x;
+                const dz = e.position.z - player.position.z;
+                if (Math.sqrt(dx*dx + dz*dz) < 7) {
+                    e.userData.health -= 2;
+                    e.position.x += dx * 1.2;
+                    e.position.z += dz * 1.2;
+                    if (e.userData.health <= 0) {
+                        score += 55;
+                        updateScoreUI();
+                        scene.remove(e);
+                        enemies.splice(i,1);
+                    }
+                    return;
+                }
+            }
+        }
+
+        function throwIklwa() {
+            if (attackCooldown > 0) return;
+            attackCooldown = 16;
+            playSound('throw');
+
+            const spear = new THREE.Mesh(new THREE.BoxGeometry(0.22, 0.22, 5), new THREE.MeshPhongMaterial({color:0xc0c0c0}));
             spear.position.copy(player.position);
-            spear.position.y += 3;
-            spear.rotation.set(0, yaw, 0);
-            
-            const velocity = new THREE.Vector3(0, 0, -35);
-            velocity.applyAxisAngle(new THREE.Vector3(0, 1, 0), yaw);
-            
-            spear.userData = { velocity: velocity };
+            spear.position.y += 3.5;
+            spear.rotation.set(0.6, yaw, 0);
+
+            const vel = new THREE.Vector3(0, 3, -52);
+            vel.applyAxisAngle(new THREE.Vector3(0,1,0), yaw);
+            spear.userData = {velocity: vel};
             scene.add(spear);
             projectiles.push(spear);
-            
-            playSound('throw');
         }
-        
+
         function updateProjectiles() {
-            for (let i = projectiles.length - 1; i >= 0; i--) {
+            for (let i=projectiles.length-1; i>=0; i--) {
                 const p = projectiles[i];
                 p.position.add(p.userData.velocity);
-                
-                // Check hits
-                for (let j = enemies.length - 1; j >= 0; j--) {
-                    const e = enemies[j];
-                    if (p.position.distanceTo(e.position) < 3) {
-                        e.userData.health--;
-                        if (e.userData.health <= 0) {
-                            score += e.userData.isBoss ? 250 : 60;
+                p.userData.velocity.y -= 0.4; // arc
+
+                for (let j=enemies.length-1; j>=0; j--) {
+                    if (p.position.distanceTo(enemies[j].position) < 4) {
+                        enemies[j].userData.health -= 2 * player.userData.weaponDamage;
+                        if (enemies[j].userData.health <= 0) {
+                            score += enemies[j].userData.isGiant ? 220 : 70;
                             updateScoreUI();
-                            scene.remove(e);
-                            enemies.splice(j, 1);
+                            scene.remove(enemies[j]);
+                            enemies.splice(j,1);
                         }
                         scene.remove(p);
-                        projectiles.splice(i, 1);
+                        projectiles.splice(i,1);
                         playSound('hit');
                         return;
                     }
                 }
-                
-                if (p.position.length() > 300) {
-                    scene.remove(p);
-                    projectiles.splice(i, 1);
+                if (p.position.y < -10) { scene.remove(p); projectiles.splice(i,1); }
+            }
+        }
+
+        function updateEnemies() {
+            for (let i=enemies.length-1; i>=0; i--) {
+                const e = enemies[i];
+                const dx = player.position.x - e.position.x;
+                const dz = player.position.z - e.position.z;
+                const dist = Math.sqrt(dx*dx + dz*dz);
+
+                if (dist < 3.5) {
+                    const dmg = e.userData.isGiant ? 22 : 11;
+                    player.userData.health = Math.max(0, player.userData.health - dmg);
+                    updateHealthUI();
+                    if (player.userData.health <= 0) endGame();
+                    scene.remove(e);
+                    enemies.splice(i,1);
+                    continue;
+                }
+
+                // Archer shoots
+                if (e.userData.isArcher && Math.random() < 0.015) {
+                    const arrow = new THREE.Mesh(new THREE.BoxGeometry(0.15,0.15,3), new THREE.MeshPhongMaterial({color:0xaaaaaa}));
+                    arrow.position.copy(e.position);
+                    arrow.position.y += 3;
+                    const vel = new THREE.Vector3(dx/dist * 28, 4, dz/dist * 28);
+                    arrow.userData = {velocity: vel, isArrow: true};
+                    scene.add(arrow);
+                    projectiles.push(arrow);
+                }
+
+                const dirX = dx / dist;
+                const dirZ = dz / dist;
+                e.position.x += dirX * e.userData.speed;
+                e.position.z += dirZ * e.userData.speed;
+                e.position.y = getTerrainHeight(e.position.x, e.position.z) + 0.1;
+                e.rotation.y = Math.atan2(dx, dz);
+            }
+        }
+
+        function updateCollectibles() {
+            for (let i=collectibles.length-1; i>=0; i--) {
+                const c = collectibles[i];
+                c.rotation.y += 0.04;
+                if (c.position.distanceTo(player.position) < 6) {
+                    // Equip new weapon
+                    currentWeapon = c.userData.type === 'axe' ? "BUFFALO AXE" : "WAR SPEAR";
+                    player.userData.weaponDamage = c.userData.type === 'axe' ? 2.2 : 1.6;
+                    document.getElementById('weapon-ui').textContent = `WEAPON: ${currentWeapon}`;
+                    scene.remove(c);
+                    collectibles.splice(i,1);
+                    playSound('hit');
                 }
             }
         }
-        
+
         function updateHealthUI() {
-            const health = player.userData.health || 100;
-            const percent = Math.max(0, health);
+            const percent = Math.max(0, player.userData.health);
             document.getElementById('health-fill').style.width = percent + '%';
         }
-        
+
         function updateScoreUI() {
-            document.getElementById('score').textContent = String(Math.floor(score)).padStart(5, '0');
+            document.getElementById('score').textContent = String(Math.floor(score)).padStart(5,'0');
             if (score > highScore) {
                 highScore = score;
                 localStorage.setItem('shaka3DHighScore', highScore);
-                document.getElementById('highscore').textContent = String(Math.floor(highScore)).padStart(5, '0');
+                document.getElementById('highscore').textContent = String(Math.floor(highScore)).padStart(5,'0');
             }
         }
-        
-        function updateStageUI() {
-            document.getElementById('stage-ui').textContent = `${currentStage}/5`;
-        }
-        
+
+        function updateStageUI() { document.getElementById('stage-ui').textContent = `${currentStage}/5`; }
+
         function advanceStage() {
             currentStage++;
-            if (currentStage > maxStages) {
-                victoryScreen();
-                return;
-            }
+            if (currentStage > maxStages) { victoryScreen(); return; }
             updateStageUI();
             createStage(currentStage);
-            // Player grows stronger
-            player.userData.health = Math.min(100, player.userData.health + 25);
+            player.userData.health = Math.min(100, player.userData.health + 30);
             updateHealthUI();
-            // Spawn more enemies
-            for (let i = 0; i < 4; i++) spawnEnemy();
-        }
-        
-        function checkStageProgress() {
-            if (enemies.length === 0 && Math.random() < 0.02) {
-                advanceStage();
+            // Boss spawn at even stages
+            if (currentStage % 2 === 0) {
+                const boss = spawnEnemy('giant');
+                enemies[enemies.length-1].userData.health = 22;
+            } else {
+                for (let i = 0; i < 6; i++) spawnEnemy(Math.random() > 0.6 ? 'archer' : 'normal');
             }
+            // Reward weapon after every stage
+            setTimeout(() => spawnCollectible(), 800);
         }
-        
+
         function gameLoop() {
-            if (!gameRunning || paused) {
-                requestAnimationFrame(gameLoop);
-                return;
-            }
-            
-            attackCooldown = Math.max(0, attackCooldown - 1);
-            if (shieldActive) {
-                shieldTime--;
-                if (shieldTime <= 0) shieldActive = false;
-            }
-            
+            if (!gameRunning || paused) { requestAnimationFrame(gameLoop); return; }
+
+            attackCooldown = Math.max(0, attackCooldown-1);
+            if (shieldActive) { shieldTime--; if (shieldTime <= 0) shieldActive = false; }
+
             updatePlayer();
             updateEnemies();
             updateProjectiles();
-            checkStageProgress();
-            
+            updateCollectibles();
+
+            // Progress when enemies cleared
+            if (enemies.length === 0 && Math.random() < 0.035) advanceStage();
+
             renderer.render(scene, camera);
             requestAnimationFrame(gameLoop);
         }
-        
+
         function startGame() {
             document.getElementById('start-screen').classList.remove('active');
-            
             if (!scene) initThree();
-            
-            score = 0;
-            currentStage = 1;
-            enemies = [];
-            projectiles = [];
+
+            score = 0; currentStage = 1; enemies = []; projectiles = []; collectibles = [];
+            player.position.set(0, 5, 0);
             player.userData.health = 100;
-            player.position.set(0, 0, 0);
+            player.userData.weaponDamage = 1;
+            currentWeapon = "IKLWA";
             yaw = 0;
-            
-            updateScoreUI();
-            updateHealthUI();
-            updateStageUI();
-            
+
+            updateScoreUI(); updateHealthUI(); updateStageUI();
             createStage(1);
-            
-            // Initial enemies
-            for (let i = 0; i < 6; i++) spawnEnemy();
-            
-            gameRunning = true;
-            paused = false;
-            
+
+            for (let i = 0; i < 8; i++) spawnEnemy(Math.random() > 0.7 ? 'archer' : 'normal');
+
+            gameRunning = true; paused = false;
             if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-            
             gameLoop();
         }
-        
+
         function endGame() {
             gameRunning = false;
-            const finalText = document.getElementById('final-score-text');
-            finalText.innerHTML = `FINAL SCORE<br><span style="font-size:42px">${Math.floor(score)}</span>`;
-            document.getElementById('kingdoms-reached').innerHTML = `KINGDOMS CONQUERED: <strong>${currentStage - 1}/5</strong>`;
+            document.getElementById('final-score-text').innerHTML = `FINAL SCORE<br><span style="font-size:42px">${Math.floor(score)}</span>`;
+            document.getElementById('kingdoms-reached').innerHTML = `KINGDOMS CONQUERED: <strong>${currentStage-1}/5</strong>`;
             document.getElementById('game-over-screen').classList.add('active');
         }
-        
+
         function victoryScreen() {
             gameRunning = false;
             document.getElementById('victory-score').innerHTML = `FINAL SCORE<br><span style="font-size:48px">${Math.floor(score)}</span>`;
             document.getElementById('victory-screen').classList.add('active');
         }
-        
+
         function restartGame() {
             document.getElementById('game-over-screen').classList.remove('active');
             document.getElementById('victory-screen').classList.remove('active');
             startGame();
         }
-        
+
         function togglePause() {
             if (!gameRunning) return;
             paused = !paused;
-            const pauseScreen = document.getElementById('pause-screen');
-            paused ? pauseScreen.classList.add('active') : pauseScreen.classList.remove('active');
+            const ps = document.getElementById('pause-screen');
+            paused ? ps.classList.add('active') : ps.classList.remove('active');
         }
-        
+
         function quitToMenu() {
-            paused = false;
-            gameRunning = false;
+            paused = false; gameRunning = false;
             document.getElementById('pause-screen').classList.remove('active');
             document.getElementById('start-screen').classList.add('active');
         }
-        
-        // Input handlers
+
         window.addEventListener('keydown', e => {
             keys[e.key.toLowerCase()] = true;
             if (e.key === 'Escape' && gameRunning) togglePause();
-            if (e.key === ' ' && gameRunning) {
-                shieldActive = true;
-                shieldTime = 120;
-                playSound('hit');
-            }
+            if (e.key.toLowerCase() === 's' && gameRunning) doStab();
+            if (e.key.toLowerCase() === 'k' && gameRunning) doKick();
+            if (e.key === 'h' && gameRunning) { shieldActive = true; shieldTime = 140; playSound('hit'); }
         });
-        
-        window.addEventListener('keyup', e => {
-            keys[e.key.toLowerCase()] = false;
-        });
-        
-        let isPointerLocked = false;
-        document.getElementById('canvas').addEventListener('click', () => {
+
+        window.addEventListener('keyup', e => keys[e.key.toLowerCase()] = false);
+
+        let pointerLocked = false;
+        const canvasEl = document.getElementById('canvas');
+        canvasEl.addEventListener('click', () => {
             if (!gameRunning) return;
-            if (!isPointerLocked) {
-                document.getElementById('canvas').requestPointerLock();
-            } else {
-                throwIklwa();
-            }
+            if (!pointerLocked) canvasEl.requestPointerLock();
+            else throwIklwa();
         });
-        
-        document.addEventListener('pointerlockchange', () => {
-            isPointerLocked = document.pointerLockElement !== null;
-        });
-        
+
+        document.addEventListener('pointerlockchange', () => pointerLocked = document.pointerLockElement !== null);
+
         document.addEventListener('mousemove', e => {
-            if (isPointerLocked && gameRunning) {
+            if (pointerLocked && gameRunning) {
                 yaw -= e.movementX * 0.003;
+                pitch = Math.max(-1.2, Math.min(1.2, pitch - e.movementY * 0.002));
             }
         });
-        
-        // Mouse click attack
-        document.getElementById('canvas').addEventListener('mousedown', e => {
-            if (e.button === 0 && gameRunning && isPointerLocked) throwIklwa();
-        });
-        
+
         function init() {
-            document.getElementById('highscore').textContent = String(highScore).padStart(5, '0');
-            console.log('%c✅ Shaka Zulu 3D READY — Free 3D control, God of War style movement, dynamic terrains & landmarks!', 'color:#DAA520; font-size:14px');
+            document.getElementById('highscore').textContent = String(highScore).padStart(5,'0');
+            console.log('%c✅ FULL 3D SHAKA ZULU READY — Realistic arms/legs animation, jump, rivers, mountains, animals, giant enemies, weapon collection!', 'color:#DAA520;font-size:14px');
         }
-        
         window.onload = init;
     </script>
 </body>
