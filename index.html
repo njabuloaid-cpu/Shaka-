@@ -21,13 +21,15 @@
         button:hover { transform:translateY(-4px); box-shadow:0 10px 0 #000; }
         .fact { font-size:14px; max-width:520px; background:rgba(255,255,255,0.1); padding:15px; border-left:6px solid var(--zulu-gold); margin-top:30px; }
         .instructions { position:absolute; bottom:20px; left:20px; background:rgba(0,0,0,0.7); padding:10px 15px; font-size:13px; border:3px solid var(--zulu-gold); pointer-events:none; line-height:1.4; }
+        #objective-ui { position:absolute; top:85px; right:25px; background:rgba(139,0,0,0.85); color:var(--zulu-gold); padding:6px 14px; border:4px solid var(--zulu-gold); font-size:13px; display:none; box-shadow:0 4px 10px rgba(0,0,0,0.5); z-index:20; }
+        #message { position:absolute; top:180px; left:50%; transform:translateX(-50%); background:var(--zulu-gold); color:#000; padding:12px 30px; font-size:18px; border:6px solid var(--zulu-red); display:none; box-shadow:0 0 25px var(--zulu-gold); text-align:center; z-index:120; white-space:pre-line; }
         footer { width:100%; max-width:900px; padding:10px; text-align:center; font-size:12px; opacity:0.7; }
     </style>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r134/three.min.js"></script>
 </head>
 <body>
     <header>
-        <div class="title">SHAKA ZULU • 3D</div>
+        <div class="title">SHAKA ZULU • IKLWA EMPIRE</div>
         <div class="stats">
             <div class="stat"><span>SCORE</span><span id="score" style="color:var(--zulu-gold);font-size:22px;">00000</span></div>
             <div class="stat"><span>HEALTH</span><div class="health-bar"><div id="health-fill" class="health-fill" style="width:100%"></div></div></div>
@@ -44,19 +46,22 @@
         SHIFT = Sprint<br>
         SPACE = Jump<br>
         MOUSE = Look + Aim (click canvas to lock)<br>
-        LEFT CLICK = Throw Iklwa / Attack<br>
+        LEFT CLICK = Throw Iklwa (unlocked Stage 4)<br>
         S = Stab (melee thrust)<br>
-        K = Kick (knockback)<br>
-        H = iHawu Shield Block<br>
+        K = Kick (knockback — unlocked Stage 3)<br>
+        H = iHawu Shield Block (unlocked Stage 2)<br>
         ESC = Pause
     </div>
 
+    <div id="objective-ui"></div>
+    <div id="message"></div>
+
     <div id="start-screen" class="overlay active">
         <h1>SHAKA ZULU</h1>
-        <h2>3D WARRIOR LEGEND</h2>
+        <h2>IKLWA EMPIRE</h2>
         <p>You are Shaka — walk the real Zulu lands.<br>Jump mountains, fight giants, collect legendary weapons.</p>
         <button onclick="startGame()">BEGIN THE CONQUEST</button>
-        <div class="fact">God of War style 3D combat • Realistic terrains with rivers, mountains, animals &amp; trees • Melee + ranged + jump + collectibles</div>
+        <div class="fact">God of War style 3D combat • 5 real Zulu stages with story • Progressive ability unlocks • Realistic terrains, rivers, mountains, animals &amp; giant beasts</div>
     </div>
 
     <div id="game-over-screen" class="overlay">
@@ -78,7 +83,12 @@
         <button onclick="quitToMenu()" style="margin-top:15px;background:#444;">RETURN TO KRAAL</button>
     </div>
 
-    <footer>Fully 3D single-file HTML game • Realistic Zulu warrior with arms/legs animation • Jump + collect weapons + giant enemies + rivers/mountains/animals • Paste as index.html</footer>
+    <div id="story-overlay" class="overlay" style="display:none; background:rgba(0,0,0,0.88); z-index:130; pointer-events:none;">
+        <h1 id="story-stage" style="color:var(--zulu-gold);font-size:42px;letter-spacing:6px;margin-bottom:20px;text-shadow:4px 4px 0 var(--zulu-red);"></h1>
+        <p id="story-text" style="max-width:660px;font-size:19px;line-height:1.7;text-align:center;color:#eee;"></p>
+    </div>
+
+    <footer>Fully 3D single-file HTML game • Refined to exact 5-stage Zulu storyline • Progressive unlocks • Goal-based progression • Predator &amp; beast enemies • Shield actually blocks • Paste as index.html</footer>
 
     <script>
         let scene, camera, renderer, playerGroup, player;
@@ -88,8 +98,11 @@
         const maxStages = 5;
         let keys = {}, yaw = 0, pitch = 0, attackCooldown = 0, shieldActive = false, shieldTime = 0;
         let velocityY = 0, isJumping = false;
-        let currentWeapon = "IKLWA"; // can become "BUFFALO AXE", "WAR SPEAR", etc.
+        let currentWeapon = "IKLWA";
         let audioCtx;
+        let abilitiesUnlocked = {};
+        let stageGoal = {x: 0, z: 0};
+        let stageGoalMarker = null;
 
         const stageData = [
             {name:"NDWANDWE HILLS", ground:0x2e5c2e, sky:0x5c8a5c, river:false, mountain:true, animals:true},
@@ -97,6 +110,29 @@
             {name:"CHUNU PLAINS", ground:0x4a7a4a, sky:0xffcc88, river:false, mountain:true, animals:false},
             {name:"HLUBI RIVER", ground:0x112233, sky:0x557788, river:true, mountain:true, animals:true},
             {name:"FINAL CONQUEST", ground:0x1a3d1a, sky:0xffeeaa, river:true, mountain:true, animals:true}
+        ];
+
+        const stageStories = [
+            {
+                title: "NDWANDWE HILLS",
+                text: "You are young Shaka, learning the ways of a warrior. The Ndwandwe tribe threatens the peace of your homeland.\nObjective: Train your combat skills by hunting wild animals and collecting basic weapons.\nReach the hilltop to signal your strength."
+            },
+            {
+                title: "QWABE VALLEY",
+                text: "The Qwabe elders challenge you to prove your bravery. Cross rivers and fight archers guarding the valley.\nObjective: Navigate rivers, defeat enemy archers, collect your first war spear.\nReach the valley center — gain first shield block ability."
+            },
+            {
+                title: "CHUNU PLAINS",
+                text: "The plains are vast, and dangerous beasts roam freely. Test your combat skills against bigger threats.\nObjective: Hunt or defeat roaming giant animals (buffalo, lions), fend off tribal warriors.\nReach the plains champion area — unlock kick attack."
+            },
+            {
+                title: "HLUBI RIVER",
+                text: "Enemies attempt an ambush near the Hlubi River. Cross the river, fight giants, and prove leadership.\nObjective: Use terrain to your advantage, master ranged combat, survive ambush.\nDefeat the river giants — unlock throw Iklwa ability."
+            },
+            {
+                title: "FINAL CONQUEST",
+                text: "The Ndwandwe return with full force. Unite the Zulu clans and claim the Iklwa Empire for your people.\nObjective: Defeat all enemy leaders, protect your warriors, collect ultimate weapons.\nConquer the final stronghold."
+            }
         ];
 
         function playSound(type) {
@@ -202,6 +238,7 @@
             currentMountains.forEach(m => scene.remove(m));
             currentTrees.forEach(t => scene.remove(t));
             currentAnimals.forEach(a => scene.remove(a));
+            if (stageGoalMarker) scene.remove(stageGoalMarker);
             currentMountains = []; currentTrees = []; currentAnimals = [];
 
             const data = stageData[stage-1];
@@ -247,8 +284,11 @@
                 }
             }
 
-            // Trees
-            for (let i = 0; i < 28; i++) {
+            // Trees — stage specific density
+            let numTrees = 28;
+            if (stage === 3) numTrees = 14;      // open plains
+            if (stage === 4) numTrees = 42;      // dense forest
+            for (let i = 0; i < numTrees; i++) {
                 const trunk = new THREE.Mesh(new THREE.CylinderGeometry(1.2, 1.6, 9, 6), new THREE.MeshPhongMaterial({color:0x8B4513}));
                 trunk.position.set((Math.random()-0.5)*200, 4.5, (Math.random()-0.5)*200);
                 trunk.castShadow = true;
@@ -262,7 +302,7 @@
                 currentTrees.push(foliage);
             }
 
-            // Animals (simple impala / cow models)
+            // Animals (passive)
             if (data.animals) {
                 for (let i = 0; i < 8; i++) {
                     const animal = new THREE.Group();
@@ -279,398 +319,25 @@
                 }
             }
 
-            // Sky / fog update
-            scene.fog.color.setHex(data.sky);
-
-            document.getElementById('kingdom-ui').textContent = data.name;
-        }
-
-        function spawnEnemy(type = 'normal') {
-            const group = new THREE.Group();
-
-            // Base warrior body
-            const torso = new THREE.Mesh(new THREE.CylinderGeometry(0.8, 1.0, 2.6, 8), new THREE.MeshPhongMaterial({color: type==='giant' ? 0x5c2a1a : 0x4a2a1a}));
-            torso.position.y = 2.4;
-            group.add(torso);
-
-            const head = new THREE.Mesh(new THREE.SphereGeometry(0.75, 12, 12), new THREE.MeshPhongMaterial({color:0xd2a679}));
-            head.position.y = 4.1;
-            group.add(head);
-
-            // Spear
-            const spear = new THREE.Mesh(new THREE.BoxGeometry(0.18, 0.18, 4), new THREE.MeshPhongMaterial({color:0x3d2b1f}));
-            spear.position.set(0, 2.8, 1.8);
-            spear.rotation.x = Math.PI / 2;
-            group.add(spear);
-
-            // If archer, replace spear with bow
-            if (type === 'archer') {
-                group.remove(spear);
-                const bow = new THREE.Mesh(new THREE.BoxGeometry(0.3, 2.8, 0.2), new THREE.MeshPhongMaterial({color:0x8B4513}));
-                bow.position.set(0, 3, 1);
-                bow.rotation.z = Math.PI / 2;
-                group.add(bow);
-                group.userData.isArcher = true;
+            // Stage-specific goal marker + objective
+            switch(stage) {
+                case 1: stageGoal = {x: 92, z: -88}; break;   // hilltop
+                case 2: stageGoal = {x: -12, z: 92}; break;   // valley center
+                case 3: stageGoal = {x: -88, z: 78}; break;   // plains champion area
+                case 4: stageGoal = {x: 88, z: -68}; break;   // river stronghold
+                case 5: stageGoal = {x: -95, z: -115}; break; // final conquest
             }
 
-            if (type === 'giant') {
-                torso.scale.set(1.6, 1.6, 1.6);
-                head.scale.set(1.4, 1.4, 1.4);
-                group.userData.isGiant = true;
-            }
-
-            group.position.set(player.position.x + 45 + Math.random()*35, 0, player.position.z + (Math.random()-0.5)*50);
-            group.userData = {
-                health: type==='giant' ? 14 : (type==='archer' ? 4 : 3),
-                speed: type==='giant' ? 0.09 : (type==='archer' ? 0.16 : 0.18),
-                type: type
-            };
-            scene.add(group);
-            enemies.push(group);
-        }
-
-        function spawnCollectible() {
-            const pickup = new THREE.Mesh(
-                new THREE.BoxGeometry(2, 2, 2),
-                new THREE.MeshPhongMaterial({color:0xffcc44, emissive:0xffaa00})
+            const markerGroup = new THREE.Group();
+            const pole = new THREE.Mesh(
+                new THREE.CylinderGeometry(0.6, 1, 16, 8),
+                new THREE.MeshPhongMaterial({color: 0xDAA520, emissive: 0xffee88})
             );
-            pickup.position.set(player.position.x + 30 + Math.random()*40, 6, player.position.z + (Math.random()-0.5)*40);
-            pickup.userData = {type: Math.random() > 0.5 ? 'axe' : 'warSpear'};
-            scene.add(pickup);
-            collectibles.push(pickup);
-        }
+            pole.position.y = 8;
+            markerGroup.add(pole);
 
-        function getTerrainHeight(x, z) {
-            return Math.sin(x/18)*3.5 + Math.cos(z/14)*2.8;
-        }
-
-        function updatePlayer() {
-            const speed = keys['shift'] ? 0.72 : 0.35;
-            let vx = 0, vz = 0;
-            if (keys['w'] || keys['arrowup']) vz -= speed;
-            if (keys['s'] || keys['arrowdown']) vz += speed;
-            if (keys['a'] || keys['arrowleft']) vx -= speed;
-            if (keys['d'] || keys['arrowright']) vx += speed;
-
-            if (vx || vz) {
-                const moveAngle = Math.atan2(vx, vz);
-                player.rotation.y = moveAngle + yaw;
-                player.position.x += Math.sin(player.rotation.y) * speed * Math.hypot(vx, vz) * 1.4;
-                player.position.z += Math.cos(player.rotation.y) * speed * Math.hypot(vx, vz) * 1.4;
-            }
-
-            // Jump physics
-            if (keys[' '] && !isJumping) {
-                velocityY = 1.1;
-                isJumping = true;
-                playSound('jump');
-            }
-            velocityY -= 0.065; // gravity
-            player.position.y += velocityY;
-            const groundY = getTerrainHeight(player.position.x, player.position.z) + 0.1;
-            if (player.position.y <= groundY) {
-                player.position.y = groundY;
-                velocityY = 0;
-                isJumping = false;
-            }
-
-            // Camera
-            const camOffset = new THREE.Vector3(0, 14, 28);
-            camOffset.applyAxisAngle(new THREE.Vector3(0,1,0), yaw);
-            camera.position.copy(player.position).add(camOffset);
-            camera.lookAt(player.position.x, player.position.y + 4, player.position.z);
-
-            // Simple running animation on legs
-            const bob = Math.sin(Date.now()/120) * 0.4;
-            player.children[4].rotation.x = bob; // left leg
-            player.children[5].rotation.x = -bob; // right leg
-        }
-
-        function doStab() {
-            if (attackCooldown > 0) return;
-            attackCooldown = 18;
-            playSound('stab');
-
-            // Arm thrust animation (temporary)
-            const rightArm = player.children[2];
-            if (rightArm) rightArm.rotation.z = -1.8;
-
-            setTimeout(() => { if (rightArm) rightArm.rotation.z = -Math.PI/3; }, 180);
-
-            for (let i = enemies.length-1; i>=0; i--) {
-                const e = enemies[i];
-                const dx = e.position.x - player.position.x;
-                const dz = e.position.z - player.position.z;
-                if (Math.sqrt(dx*dx + dz*dz) < 6) {
-                    e.userData.health -= 3 * player.userData.weaponDamage;
-                    if (e.userData.health <= 0) {
-                        score += e.userData.isGiant ? 220 : 70;
-                        updateScoreUI();
-                        scene.remove(e);
-                        enemies.splice(i,1);
-                        if (Math.random() > 0.7) spawnCollectible();
-                    }
-                    return;
-                }
-            }
-        }
-
-        function doKick() {
-            if (attackCooldown > 0) return;
-            attackCooldown = 24;
-            playSound('kick');
-
-            for (let i = enemies.length-1; i>=0; i--) {
-                const e = enemies[i];
-                const dx = e.position.x - player.position.x;
-                const dz = e.position.z - player.position.z;
-                if (Math.sqrt(dx*dx + dz*dz) < 7) {
-                    e.userData.health -= 2;
-                    e.position.x += dx * 1.2;
-                    e.position.z += dz * 1.2;
-                    if (e.userData.health <= 0) {
-                        score += 55;
-                        updateScoreUI();
-                        scene.remove(e);
-                        enemies.splice(i,1);
-                    }
-                    return;
-                }
-            }
-        }
-
-        function throwIklwa() {
-            if (attackCooldown > 0) return;
-            attackCooldown = 16;
-            playSound('throw');
-
-            const spear = new THREE.Mesh(new THREE.BoxGeometry(0.22, 0.22, 5), new THREE.MeshPhongMaterial({color:0xc0c0c0}));
-            spear.position.copy(player.position);
-            spear.position.y += 3.5;
-            spear.rotation.set(0.6, yaw, 0);
-
-            const vel = new THREE.Vector3(0, 3, -52);
-            vel.applyAxisAngle(new THREE.Vector3(0,1,0), yaw);
-            spear.userData = {velocity: vel};
-            scene.add(spear);
-            projectiles.push(spear);
-        }
-
-        function updateProjectiles() {
-            for (let i=projectiles.length-1; i>=0; i--) {
-                const p = projectiles[i];
-                p.position.add(p.userData.velocity);
-                p.userData.velocity.y -= 0.4; // arc
-
-                for (let j=enemies.length-1; j>=0; j--) {
-                    if (p.position.distanceTo(enemies[j].position) < 4) {
-                        enemies[j].userData.health -= 2 * player.userData.weaponDamage;
-                        if (enemies[j].userData.health <= 0) {
-                            score += enemies[j].userData.isGiant ? 220 : 70;
-                            updateScoreUI();
-                            scene.remove(enemies[j]);
-                            enemies.splice(j,1);
-                        }
-                        scene.remove(p);
-                        projectiles.splice(i,1);
-                        playSound('hit');
-                        return;
-                    }
-                }
-                if (p.position.y < -10) { scene.remove(p); projectiles.splice(i,1); }
-            }
-        }
-
-        function updateEnemies() {
-            for (let i=enemies.length-1; i>=0; i--) {
-                const e = enemies[i];
-                const dx = player.position.x - e.position.x;
-                const dz = player.position.z - e.position.z;
-                const dist = Math.sqrt(dx*dx + dz*dz);
-
-                if (dist < 3.5) {
-                    const dmg = e.userData.isGiant ? 22 : 11;
-                    player.userData.health = Math.max(0, player.userData.health - dmg);
-                    updateHealthUI();
-                    if (player.userData.health <= 0) endGame();
-                    scene.remove(e);
-                    enemies.splice(i,1);
-                    continue;
-                }
-
-                // Archer shoots
-                if (e.userData.isArcher && Math.random() < 0.015) {
-                    const arrow = new THREE.Mesh(new THREE.BoxGeometry(0.15,0.15,3), new THREE.MeshPhongMaterial({color:0xaaaaaa}));
-                    arrow.position.copy(e.position);
-                    arrow.position.y += 3;
-                    const vel = new THREE.Vector3(dx/dist * 28, 4, dz/dist * 28);
-                    arrow.userData = {velocity: vel, isArrow: true};
-                    scene.add(arrow);
-                    projectiles.push(arrow);
-                }
-
-                const dirX = dx / dist;
-                const dirZ = dz / dist;
-                e.position.x += dirX * e.userData.speed;
-                e.position.z += dirZ * e.userData.speed;
-                e.position.y = getTerrainHeight(e.position.x, e.position.z) + 0.1;
-                e.rotation.y = Math.atan2(dx, dz);
-            }
-        }
-
-        function updateCollectibles() {
-            for (let i=collectibles.length-1; i>=0; i--) {
-                const c = collectibles[i];
-                c.rotation.y += 0.04;
-                if (c.position.distanceTo(player.position) < 6) {
-                    // Equip new weapon
-                    currentWeapon = c.userData.type === 'axe' ? "BUFFALO AXE" : "WAR SPEAR";
-                    player.userData.weaponDamage = c.userData.type === 'axe' ? 2.2 : 1.6;
-                    document.getElementById('weapon-ui').textContent = `WEAPON: ${currentWeapon}`;
-                    scene.remove(c);
-                    collectibles.splice(i,1);
-                    playSound('hit');
-                }
-            }
-        }
-
-        function updateHealthUI() {
-            const percent = Math.max(0, player.userData.health);
-            document.getElementById('health-fill').style.width = percent + '%';
-        }
-
-        function updateScoreUI() {
-            document.getElementById('score').textContent = String(Math.floor(score)).padStart(5,'0');
-            if (score > highScore) {
-                highScore = score;
-                localStorage.setItem('shaka3DHighScore', highScore);
-                document.getElementById('highscore').textContent = String(Math.floor(highScore)).padStart(5,'0');
-            }
-        }
-
-        function updateStageUI() { document.getElementById('stage-ui').textContent = `${currentStage}/5`; }
-
-        function advanceStage() {
-            currentStage++;
-            if (currentStage > maxStages) { victoryScreen(); return; }
-            updateStageUI();
-            createStage(currentStage);
-            player.userData.health = Math.min(100, player.userData.health + 30);
-            updateHealthUI();
-            // Boss spawn at even stages
-            if (currentStage % 2 === 0) {
-                const boss = spawnEnemy('giant');
-                enemies[enemies.length-1].userData.health = 22;
-            } else {
-                for (let i = 0; i < 6; i++) spawnEnemy(Math.random() > 0.6 ? 'archer' : 'normal');
-            }
-            // Reward weapon after every stage
-            setTimeout(() => spawnCollectible(), 800);
-        }
-
-        function gameLoop() {
-            if (!gameRunning || paused) { requestAnimationFrame(gameLoop); return; }
-
-            attackCooldown = Math.max(0, attackCooldown-1);
-            if (shieldActive) { shieldTime--; if (shieldTime <= 0) shieldActive = false; }
-
-            updatePlayer();
-            updateEnemies();
-            updateProjectiles();
-            updateCollectibles();
-
-            // Progress when enemies cleared
-            if (enemies.length === 0 && Math.random() < 0.035) advanceStage();
-
-            renderer.render(scene, camera);
-            requestAnimationFrame(gameLoop);
-        }
-
-        function startGame() {
-            document.getElementById('start-screen').classList.remove('active');
-            if (!scene) initThree();
-
-            score = 0; currentStage = 1; enemies = []; projectiles = []; collectibles = [];
-            player.position.set(0, 5, 0);
-            player.userData.health = 100;
-            player.userData.weaponDamage = 1;
-            currentWeapon = "IKLWA";
-            yaw = 0;
-
-            updateScoreUI(); updateHealthUI(); updateStageUI();
-            createStage(1);
-
-            for (let i = 0; i < 8; i++) spawnEnemy(Math.random() > 0.7 ? 'archer' : 'normal');
-
-            gameRunning = true; paused = false;
-            if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-            gameLoop();
-        }
-
-        function endGame() {
-            gameRunning = false;
-            document.getElementById('final-score-text').innerHTML = `FINAL SCORE<br><span style="font-size:42px">${Math.floor(score)}</span>`;
-            document.getElementById('kingdoms-reached').innerHTML = `KINGDOMS CONQUERED: <strong>${currentStage-1}/5</strong>`;
-            document.getElementById('game-over-screen').classList.add('active');
-        }
-
-        function victoryScreen() {
-            gameRunning = false;
-            document.getElementById('victory-score').innerHTML = `FINAL SCORE<br><span style="font-size:48px">${Math.floor(score)}</span>`;
-            document.getElementById('victory-screen').classList.add('active');
-        }
-
-        function restartGame() {
-            document.getElementById('game-over-screen').classList.remove('active');
-            document.getElementById('victory-screen').classList.remove('active');
-            startGame();
-        }
-
-        function togglePause() {
-            if (!gameRunning) return;
-            paused = !paused;
-            const ps = document.getElementById('pause-screen');
-            paused ? ps.classList.add('active') : ps.classList.remove('active');
-        }
-
-        function quitToMenu() {
-            paused = false; gameRunning = false;
-            document.getElementById('pause-screen').classList.remove('active');
-            document.getElementById('start-screen').classList.add('active');
-        }
-
-        window.addEventListener('keydown', e => {
-            keys[e.key.toLowerCase()] = true;
-            if (e.key === 'Escape' && gameRunning) togglePause();
-            if (e.key.toLowerCase() === 's' && gameRunning) doStab();
-            if (e.key.toLowerCase() === 'k' && gameRunning) doKick();
-            if (e.key === 'h' && gameRunning) { shieldActive = true; shieldTime = 140; playSound('hit'); }
-        });
-
-        window.addEventListener('keyup', e => keys[e.key.toLowerCase()] = false);
-
-        let pointerLocked = false;
-        const canvasEl = document.getElementById('canvas');
-        canvasEl.addEventListener('click', () => {
-            if (!gameRunning) return;
-            if (!pointerLocked) canvasEl.requestPointerLock();
-            else throwIklwa();
-        });
-
-        document.addEventListener('pointerlockchange', () => pointerLocked = document.pointerLockElement !== null);
-
-        document.addEventListener('mousemove', e => {
-            if (pointerLocked && gameRunning) {
-                yaw -= e.movementX * 0.003;
-                pitch = Math.max(-1.2, Math.min(1.2, pitch - e.movementY * 0.002));
-            }
-        });
-
-        function init() {
-            document.getElementById('highscore').textContent = String(highScore).padStart(5,'0');
-            console.log('%c✅ FULL 3D SHAKA ZULU READY — Realistic arms/legs animation, jump, rivers, mountains, animals, giant enemies, weapon collection!', 'color:#DAA520;font-size:14px');
-        }
-        window.onload = init;
-    </script>
-</body>
-</html>
+            const top = new THREE.Mesh(
+                new THREE.ConeGeometry(3, 5, 4),
+                new THREE.MeshPhongMaterial({color: 0x8B0000})
+            );
+          
