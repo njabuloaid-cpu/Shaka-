@@ -1,419 +1,189 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Shaka Zulu: Iklwa Empire • 3D</title>
-    <style>
-        @import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
-        :root { --zulu-red: #8B0000; --zulu-gold: #DAA520; }
-        * { box-sizing: border-box; }
-        body { 
-            margin:0; padding:0; background:#000; color:#fff; 
-            font-family:'Press Start 2P',system-ui; 
-            overflow:hidden; display:flex; flex-direction:column; 
-            align-items:center; height:100dvh; touch-action:none; 
-        }
-        header { 
-            width:100%; max-width:900px; background:var(--zulu-red); 
-            padding:8px 15px; display:flex; justify-content:space-between; 
-            align-items:center; box-shadow:0 4px 10px rgba(0,0,0,0.5); 
-            z-index:10; font-size:0.9em; flex-shrink:0;
-        }
-        .title { font-size:20px; letter-spacing:3px; text-shadow:3px 3px 0 #000; }
-        .stats { display:flex; gap:12px; font-size:13px; align-items:center; }
-        .health-bar { width:120px; height:18px; background:#222; border:3px solid var(--zulu-gold); position:relative; overflow:hidden; }
-        .health-fill { height:100%; background:linear-gradient(#00ff00,#00cc00); transition:width 0.3s linear; }
-        #canvas { 
-            border:8px solid var(--zulu-gold); border-radius:8px; 
-            box-shadow:0 0 30px rgba(218,165,32,0.6); background:#111; 
-            display:block; flex:1 1 auto; max-width:900px; width:100%;
-        }
-        .overlay { 
-            position:absolute; top:0; left:0; width:100%; height:100%; 
-            background:rgba(0,0,0,0.9); display:none; flex-direction:column; 
-            align-items:center; justify-content:center; z-index:100; 
-            text-align:center; padding:20px; box-sizing:border-box;
-        }
-        .overlay.active { display:flex; }
-        .overlay h1 { font-size:42px; color:var(--zulu-gold); text-shadow:6px 6px 0 var(--zulu-red); margin-bottom:10px; letter-spacing:8px; }
-        button { 
-            font-family:'Press Start 2P',system-ui; font-size:18px; 
-            padding:15px 40px; background:var(--zulu-red); color:#fff; 
-            border:6px solid var(--zulu-gold); cursor:pointer; margin-top:20px; 
-            box-shadow:0 6px 0 #000; transition:all 0.1s;
-        }
-        button:hover, button:active { transform:translateY(-4px); box-shadow:0 10px 0 #000; }
-        .instructions { 
-            position:absolute; bottom:12px; left:12px; background:rgba(0,0,0,0.8); 
-            padding:8px 12px; font-size:11px; border:3px solid var(--zulu-gold); 
-            pointer-events:none; line-height:1.3; z-index:50; max-width:92%;
-        }
-        #objective-ui { 
-            position:absolute; top:72px; right:15px; background:rgba(139,0,0,0.9); 
-            color:var(--zulu-gold); padding:5px 12px; border:4px solid var(--zulu-gold); 
-            font-size:12px; display:none; box-shadow:0 4px 10px rgba(0,0,0,0.5); z-index:20;
-        }
-        #message { 
-            position:absolute; top:160px; left:50%; transform:translateX(-50%); 
-            background:var(--zulu-gold); color:#000; padding:10px 25px; 
-            font-size:16px; border:6px solid var(--zulu-red); display:none; 
-            box-shadow:0 0 25px var(--zulu-gold); text-align:center; z-index:120; 
-            white-space:pre-line;
-        }
-        #minimap { 
-            position:absolute; top:78px; left:15px; width:130px; height:130px; 
-            border:4px solid var(--zulu-gold); border-radius:8px; 
-            box-shadow:0 0 20px rgba(218,165,32,0.8); z-index:30; 
-            background:rgba(20,40,20,0.9);
-        }
-        #mobile-controls { 
-            position:absolute; bottom:12px; left:12px; right:12px; 
-            display:none; z-index:200; pointer-events:none;
-        }
-        .joystick { 
-            width:110px; height:110px; background:rgba(218,165,32,0.3); 
-            border:7px solid var(--zulu-gold); border-radius:50%; 
-            position:relative; pointer-events:all;
-        }
-        .joystick-knob { 
-            position:absolute; width:42px; height:42px; background:var(--zulu-gold); 
-            border-radius:50%; top:50%; left:50%; transform:translate(-50%,-50%); 
-            box-shadow:0 4px 12px rgba(0,0,0,0.6);
-        }
-        .action-btn { 
-            width:62px; height:62px; background:var(--zulu-red); 
-            border:6px solid var(--zulu-gold); color:#fff; font-size:13px; 
-            border-radius:50%; display:flex; align-items:center; justify-content:center; 
-            box-shadow:0 6px 0 #000; pointer-events:all; margin:5px; opacity:0.4;
-        }
-        .action-btn.unlocked { opacity:1; }
-        footer { 
-            width:100%; max-width:900px; padding:6px; text-align:center; 
-            font-size:10px; opacity:0.6; flex-shrink:0;
-        }
-    </style>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r134/three.min.js"></script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Shaka Zulu: Iklwa Empire • Legendary Edition</title>
+<style>
+
+body { margin:0; padding:0; background:#000; color:#fff; font-family:'Press Start 2P',system-ui; overflow:hidden; }
+header { background:#8B0000; padding:10px; display:flex; justify-content:space-between; align-items:center; }
+.title { font-size:22px; color:#DAA520; text-shadow:2px 2px #000; }
+.stats { display:flex; gap:20px; }
+.health-bar { width:140px; height:20px; background:#222; border:3px solid #DAA520; }
+
+.health-fill { height:100%; background:linear-gradient(#00ff00,#00cc00); transition:width 0.3s; }
+#canvas { width:100%; height:500px; border:6px solid #DAA520; background:#111; }
+#message { position:absolute; top:150px; left:50%; transform:translateX(-50%); background:#DAA520; color:#000; padding:12px 30px; font-size:18px; border:6px solid #8B0000; display:none; }
+button { font-family:'Press Start 2P'; font-size:18px; padding:12px 30px; background:#8B0000; color:#fff; border:4px solid #DAA520; cursor:pointer; }
+.overlay { position:absolute; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.9); display:none; align-items:center; justify-content:center; flex-direction:column; }
+.overlay.active { display:flex; }
+
+</style>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r134/three.min.js"></script>
 </head>
 <body>
-    <header>
-        <div class="title">SHAKA ZULU • IKLWA EMPIRE</div>
-        <div class="stats">
-            <div class="stat"><span>SCORE</span><span id="score" style="color:var(--zulu-gold);font-size:20px;">00000</span></div>
-            <div class="stat"><span>HEALTH</span><div class="health-bar"><div id="health-fill" class="health-fill" style="width:100%"></div></div></div>
-            <div class="stat"><span>HIGH</span><span id="highscore" style="color:var(--zulu-gold);font-size:20px;">00000</span></div>
-            <div class="stat" style="font-size:12px;color:var(--zulu-gold);">STAGE <span id="stage-ui">1/5</span></div>
-        </div>
-    </header>
+<header>
+<div class="title">SHAKA ZULU • IKLWA EMPIRE</div>
+<div class="stats">
+<div>SCORE: <span id="score">00000</span></div>
+<div>HEALTH: <div class="health-bar"><div id="health-fill" class="health-fill" style="width:100%"></div></div></div>
+<div>STAGE: <span id="stage-ui">1</span></div>
+<div>WEAPON: <span id="weapon-ui">IKLWA</span></div>
+</div>
+</header>
+<canvas id="canvas"></canvas>
+<div id="message"></div>
 
-    <canvas id="canvas"></canvas>
-    <canvas id="minimap" width="130" height="130"></canvas>
 
-    <div class="instructions" id="instructions">
-        PC: WASD + Mouse • SHIFT Sprint • SPACE Jump<br>
-        S=Stab • K=Kick • H=Shield • L-Click=Throw<br>
-        MOBILE: Joystick + buttons
-    </div>
+<div id="start-screen" class="overlay active">
+<h1>SHAKA ZULU: LEGENDARY EDITION</h1>
 
-    <div id="objective-ui"></div>
-    <div id="message"></div>
+<button onclick="startGame()">BEGIN THE CONQUEST</button>
+</div>
 
-    <div id="mobile-controls">
-        <div style="display:flex; justify-content:space-between; align-items:flex-end;">
-            <div id="joystick" class="joystick">
-                <div id="joystick-knob" class="joystick-knob"></div>
-            </div>
-            <div style="display:flex; flex-direction:column; gap:8px; align-items:flex-end;">
-                <div onclick="mobileAction('stab')" class="action-btn unlocked" id="btn-stab">S<br>STAB</div>
-                <div onclick="mobileAction('kick')" class="action-btn" id="btn-kick">K<br>KICK</div>
-                <div onclick="mobileAction('shield')" class="action-btn" id="btn-shield">H<br>SHIELD</div>
-                <div onclick="mobileAction('throw')" class="action-btn" id="btn-throw" style="display:none;">THROW</div>
-            </div>
-        </div>
-    </div>
+<div id="victory-screen" class="overlay">
+<h1>ZULU EMPIRE UNITED!</h1>
+<button onclick="restartGame()">PLAY AGAIN</button>
+</div>
 
-    <div id="start-screen" class="overlay active">
-        <h1>SHAKA ZULU</h1>
-        <h2>IKLWA EMPIRE</h2>
-        <p style="color:#ffcc44;">FULLY FIXED FOR MOBILE — 3D visible &amp; playable on phones</p>
-        <button onclick="startGame()">BEGIN THE CONQUEST</button>
-    </div>
+<script>
+let scene, camera, renderer, player, enemies=[];
+let score=0, currentStage=1, gameRunning=false;
+let abilitiesUnlocked={stab:true, shield:false, kick:false, throw:false, aura:false, chant:false};
+let health=100;
 
-    <div id="game-over-screen" class="overlay">
-        <h1>GAME OVER</h1>
-        <p id="final-score-text" style="font-size:24px;color:var(--zulu-gold);"></p>
-        <p id="kingdoms-reached" style="color:#ffcc44;"></p>
-        <button onclick="restartGame()">REBUILD THE EMPIRE</button>
-    </div>
+function initThree(){
+  scene=new THREE.Scene();
+  camera=new THREE.PerspectiveCamera(75,window.innerWidth/window.innerHeight,0.1,1000);
+  renderer=new THREE.WebGLRenderer({canvas:document.getElementById('canvas')});
+  renderer.setSize(window.innerWidth,500);
+  player=new THREE.Mesh(new THREE.BoxGeometry(1,2,1),new THREE.MeshBasicMaterial({color:0xDAA520}));
+  scene.add(player);
+  camera.position.z=5;
+  spawnEnemy();
+}
 
-    <div id="victory-screen" class="overlay" style="background:linear-gradient(rgba(0,50,0,0.9),rgba(139,0,0,0.9));">
-        <h1 style="color:#ffcc44;font-size:54px;">ZULU EMPIRE UNITED!</h1>
-        <p id="victory-score" style="font-size:32px;color:var(--zulu-gold);"></p>
-        <button onclick="restartGame()" style="background:#006400;">PLAY AGAIN — NEW LEGEND</button>
-    </div>
+function spawnEnemy(){
+  let enemy=new THREE.Mesh(new THREE.BoxGeometry(1,2,1),new THREE.MeshBasicMaterial({color:0x8B0000}));
+  enemy.position.x=Math.random()*6-3;
+  enemy.position.z=-10;
+  scene.add(enemy);
+  enemies.push(enemy);
 
-    <div id="pause-screen" class="overlay" style="background:rgba(0,0,0,0.95);">
-        <h1>PAUSED</h1>
-        <button onclick="togglePause()">RESUME CONQUEST</button>
-        <button onclick="quitToMenu()" style="margin-top:15px;background:#444;">RETURN TO KRAAL</button>
-    </div>
+}
 
-    <footer>MOBILE OPTIMIZED • Dynamic viewport • Responsive canvas • Touch-ready</footer>
+function startGame(){
+  document.getElementById('start-screen').classList.remove('active');
+  if(!scene) initThree();
+  score=0; currentStage=1; health=100; gameRunning=true;
+  showStageStory(currentStage);
+  gameLoop();
+}
 
-    <script>
-        let scene, camera, renderer, player, playerGroup;
-        let enemies = [], projectiles = [], particles = [], collectibles = [];
-        let score = 0, highScore = localStorage.getItem('shaka3DHighScore') || 0;
-        let gameRunning = false, paused = false, currentStage = 1;
-        const maxStages = 5;
-        let keys = {}, yaw = 0, pitch = 0, attackCooldown = 0, shieldActive = false, shieldTime = 0;
-        let velocityY = 0, isJumping = false;
-        let currentWeapon = "IKLWA";
-        let audioCtx;
-        let abilitiesUnlocked = {stab:true, kick:false, shieldBlock:false, throwIklwa:false};
-        let stageGoal = {x: 0, z: 0};
-        let isMobile = false;
-        let touchJoy = {active:false, dx:0, dz:0, startX:0, startY:0};
-        let joystickEl, knobEl;
-        let minimapCtx;
-        let resizeTimeout;
+function gameLoop(){
+  if(!gameRunning) return;
+  requestAnimationFrame(gameLoop);
+  enemies.forEach(e=>{
+    e.position.z+=0.05;
+    if(e.position.z>0){
+      takeDamage(5);
+      e.position.z=-10;
+    }
+  });
+  renderer.render(scene,camera);
+}
 
-        const stageData = [
-            {name:"NDWANDWE HILLS", ground:0x2e5c2e, sky:0x5c8a5c, river:false, mountain:true, animals:true},
-            {name:"QWABE VALLEY", ground:0x3d6c3d, sky:0xaa5522, river:true, mountain:false, animals:true},
-            // ... add remaining stages as needed
-        ];
+function takeDamage(amount){
+  if(abilitiesUnlocked.shield){ amount=Math.floor(amount/2); }
+  health-=amount;
+  updateHealthUI();
+  if(health<=0){ victoryScreen(); }
+}
 
-        function playSound(type) {
-            if (!audioCtx) return;
-            const osc = audioCtx.createOscillator();
-            const gain = audioCtx.createGain();
-            osc.connect(gain); gain.connect(audioCtx.destination);
-            if (type==='throw') { osc.frequency.value = 180; gain.gain.value=0.6; osc.type='sawtooth'; }
-            else if (type==='stab') { osc.frequency.value = 420; gain.gain.value=0.7; osc.type='square'; }
-            else if (type==='kick') { osc.frequency.value = 90; gain.gain.value=0.8; osc.type='sine'; }
-            else if (type==='hit') { osc.frequency.value = 620; gain.gain.value=0.5; osc.type='square'; }
-            else if (type==='jump') { osc.frequency.value = 280; gain.gain.value=0.3; osc.type='triangle'; }
-            osc.start(); setTimeout(()=>osc.stop(), 140);
-        }
+function updateHealthUI(){
+  document.getElementById('health-fill').style.width=Math.max(0,health)+"%";
+}
 
-        function initThree() {
-            const canvas = document.getElementById('canvas');
-            renderer = new THREE.WebGLRenderer({canvas, antialias:true, alpha:false});
-            renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-            resizeCanvas();
+function showStageStory(stage){
+  let msg="";
+  switch(stage){
+    case 1: msg="Stage 1: Rise of Shaka — Learn the stab."; break;
+    case 2: msg="Stage 2: Shield unlocked — iHawu strengthens defense."; abilitiesUnlocked.shield=true; break;
+    case 3: msg="Stage 3: Kick unlocked — drive enemies back."; abilitiesUnlocked.kick=true; break;
+    case 4: msg="Stage 4: Mkhonto unlocked — spear throw available."; abilitiesUnlocked.throw=true; break;
+    case 5: msg="Stage 5: Spirit Blessings — glowing aura and chants."; abilitiesUnlocked.aura=true; abilitiesUnlocked.chant=true; break;
+  }
+  showUnlock(msg);
+}
 
-            scene = new THREE.Scene();
-            scene.fog = new THREE.Fog(0x112211, 40, 160);
+function showUnlock(msg){
+  const el=document.getElementById('message');
+  el.innerHTML=msg;
+  el.style.display='block';
+  setTimeout(()=>el.style.display='none',4000);
+}
 
-            camera = new THREE.PerspectiveCamera(70, canvas.clientWidth / canvas.clientHeight, 0.1, 300);
-            camera.position.set(0, 8, 15);
+function victoryScreen(){
+  gameRunning=false;
 
-            const hemi = new THREE.HemisphereLight(0x88aa77, 0x334422, 0.9);
-            scene.add(hemi);
-            const sun = new THREE.DirectionalLight(0xffeecc, 1.6);
-            sun.position.set(60, 110, 50);
-            scene.add(sun);
+  document.getElementById('victory-screen').classList.add('active');
+}
 
-            // Simple player (expand with full model as needed)
-            playerGroup = new THREE.Group();
-            scene.add(playerGroup);
+function restartGame(){
+  document.getElementById('victory-screen').classList.remove('active');
+  startGame();
+}
 
-            const torso = new THREE.Mesh(
-                new THREE.BoxGeometry(1.4, 2.4, 1.1),
-                new THREE.MeshPhongMaterial({color: 0x3d2b1f})
-            );
-            torso.position.y = 2.4;
-            playerGroup.add(torso);
+// === Combat Actions with new keys ===
+// J = Stab, K = Kick, L = Shield, I = Throw spear, O = Aura, P = Chant
+window.addEventListener('keydown',e=>{
+  if(!gameRunning) return;
+  switch(e.key.toLowerCase()){
+    case 'j': if(abilitiesUnlocked.stab) stab(); break;
+    case 'k': if(abilitiesUnlocked.kick) kick(); break;
+    case 'l': if(abilitiesUnlocked.shield) showUnlock("Shield raised!"); break;
+    case 'i': if(abilitiesUnlocked.throw) throwSpear(); break;
+    case 'o': if(abilitiesUnlocked.aura) glowingAura(); break;
+    case 'p': if(abilitiesUnlocked.chant) warriorChant(); break;
+  }
+});
 
-            // Head
-            const head = new THREE.Mesh(
-                new THREE.SphereGeometry(0.8, 16, 16),
-                new THREE.MeshPhongMaterial({color: 0x5c4033})
-            );
-            head.position.y = 4.5;
-            playerGroup.add(head);
+function stab(){
+  enemies.forEach(e=>{
+    if(Math.abs(e.position.z)<2){ score+=10; e.position.z=-10; showUnlock("Stab successful!"); }
+  });
+  updateScoreUI();
+}
 
-            player = playerGroup;
-            player.userData = { health: 100, weaponDamage: 1 };
-            player.position.set(0, 0, 0);
-        }
+function kick(){
+  enemies.forEach(e=>{
+    if(Math.abs(e.position.z)<2){ e.position.z-=5; showUnlock("Kick pushed enemy back!"); }
+  });
+}
 
-        function resizeCanvas() {
-            const canvas = document.getElementById('canvas');
-            const headerH = 68;
-            const footerH = 30;
-            const w = Math.min(window.innerWidth - 30, 900);
-            const h = Math.max(300, window.innerHeight - headerH - footerH);
+function throwSpear(){
+  enemies.forEach(e=>{
+    if(Math.abs(e.position.z)<5){ score+=20; e.position.z=-10; showUnlock("Mkhonto throw hit!"); }
+  });
+  updateScoreUI();
+}
 
-            canvas.style.width = w + 'px';
-            canvas.style.height = h + 'px';
-            canvas.width = w;
-            canvas.height = h;
+function glowingAura(){
+  showUnlock("Glowing Aura — Invincible for 5s!");
+  let oldHealth=health;
+  setTimeout(()=>{ health=oldHealth; },5000);
+}
 
-            if (renderer) {
-                renderer.setSize(w, h);
-            }
-            if (camera) {
-                camera.aspect = w / h;
-                camera.updateProjectionMatrix();
-            }
-        }
+function warriorChant(){
+  showUnlock("Warrior Chant — morale boosted!");
+  score+=50;
+  updateScoreUI();
+}
 
-        function gameLoop() {
-            if (!gameRunning || paused) {
-                requestAnimationFrame(gameLoop);
-                return;
-            }
-
-            // Update player movement, enemies, collisions, etc. (expand here)
-            // Example placeholder:
-            if (touchJoy.active) {
-                // Apply joystick movement to player
-                player.position.x += touchJoy.dx * 0.15;
-                player.position.z += touchJoy.dz * 0.15;
-            }
-
-            attackCooldown = Math.max(0, attackCooldown - 1);
-            if (shieldTime > 0) shieldTime--;
-
-            // Render
-            renderer.render(scene, camera);
-
-            // Update UI
-            updateHealthUI();
-
-            requestAnimationFrame(gameLoop);
-        }
-
-        function updateHealthUI() {
-            const fill = document.getElementById('health-fill');
-            if (player && player.userData.health) {
-                fill.style.width = Math.max(0, player.userData.health) + '%';
-            }
-        }
-
-        function updateScoreUI() {
-            document.getElementById('score').textContent = String(score).padStart(5,'0');
-        }
-
-        function updateStageUI() {
-            document.getElementById('stage-ui').textContent = currentStage + '/' + maxStages;
-        }
-
-        window.mobileAction = function(action) {
-            if (!gameRunning || paused) return;
-            if (action === 'stab') doStab();
-            if (action === 'kick' && abilitiesUnlocked.kick) doKick();
-            if (action === 'shield' && abilitiesUnlocked.shieldBlock) {
-                shieldActive = true;
-                shieldTime = 120;
-                playSound('hit');
-            }
-            if (action === 'throw' && abilitiesUnlocked.throwIklwa) throwIklwa();
-        };
-
-        // Placeholder action functions
-        function doStab() { if (attackCooldown === 0) { playSound('stab'); attackCooldown = 20; } }
-        function doKick() { if (attackCooldown === 0) { playSound('kick'); attackCooldown = 30; } }
-        function throwIklwa() { playSound('throw'); }
-
-        function startGame() {
-            document.getElementById('start-screen').classList.remove('active');
-            if (!scene) initThree();
-
-            score = 0; currentStage = 1;
-            enemies = []; projectiles = []; collectibles = []; particles = [];
-            player.position.set(0, 0, 0);
-            player.userData.health = 100;
-            yaw = 0;
-
-            updateScoreUI(); updateHealthUI(); updateStageUI();
-
-            gameRunning = true; paused = false;
-            if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-
-            if (isMobile) {
-                document.getElementById('mobile-controls').style.display = 'block';
-                setupJoystick();
-            }
-            document.getElementById('minimap').style.display = 'block';
-
-            gameLoop();
-        }
-
-        function restartGame() {
-            location.reload(); // Simple restart for now
-        }
-
-        function togglePause() {
-            paused = !paused;
-            document.getElementById('pause-screen').classList.toggle('active', paused);
-            if (!paused) gameLoop();
-        }
-
-        function quitToMenu() {
-            location.reload();
-        }
-
-        function setupJoystick() {
-            joystickEl = document.getElementById('joystick');
-            knobEl = document.getElementById('joystick-knob');
-
-            joystickEl.addEventListener('touchstart', e => {
-                e.preventDefault();
-                touchJoy.active = true;
-                const touch = e.touches[0];
-                touchJoy.startX = touch.clientX;
-                touchJoy.startY = touch.clientY;
-            });
-
-            document.addEventListener('touchmove', e => {
-                if (!touchJoy.active) return;
-                e.preventDefault();
-                const touch = e.touches[0];
-                let dx = touch.clientX - touchJoy.startX;
-                let dz = touch.clientY - touchJoy.startY;
-                const dist = Math.sqrt(dx*dx + dz*dz);
-                const maxDist = 45;
-
-                if (dist > maxDist) {
-                    dx = (dx / dist) * maxDist;
-                    dz = (dz / dist) * maxDist;
-                }
-
-                touchJoy.dx = dx / maxDist;
-                touchJoy.dz = dz / maxDist;
-
-                knobEl.style.transform = `translate(${dx - 21}px, ${dz - 21}px)`;
-            });
-
-            document.addEventListener('touchend', () => {
-                if (touchJoy.active) {
-                    touchJoy.active = false;
-                    touchJoy.dx = 0;
-                    touchJoy.dz = 0;
-                    knobEl.style.transform = 'translate(-50%, -50%)';
-                }
-            });
-        }
-
-        function init() {
-            document.getElementById('highscore').textContent = String(highScore).padStart(5,'0');
-            minimapCtx = document.getElementById('minimap').getContext('2d');
-            isMobile = /Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
-
-            window.addEventListener('resize', () => {
-                clearTimeout(resizeTimeout);
-                resizeTimeout = setTimeout(() => {
-                    if (gameRunning) resizeCanvas();
-                }, 100);
-            });
-
-            console.log('%c✅ Shaka Zulu 3D — Mobile Fully Fixed & Optimized', 'color:#DAA520;font-size:15px');
-        }
-
-        window.onload = init;
-    </script>
+function updateScoreUI(){
+  document.getElementById('score').innerText=String(score).padStart(5,'0');
+}
+</script>
 </body>
-    </html>
+</html>
