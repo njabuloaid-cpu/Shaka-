@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -178,6 +179,164 @@ function glowingAura(){
 function warriorChant(){
   showUnlock("Warrior Chant — morale boosted!");
   score+=50;
+  updateScoreUI();
+}
+
+function updateScoreUI(){
+  document.getElementById('score').innerText=String(score).padStart(5,'0');
+}
+</script>
+</body>
+</html>
+Show quoted text
+--
+Show quoted text
+Show quoted text
+let health=100;
+
+// === Setup ===
+
+function initThree(){
+  scene=new THREE.Scene();
+  camera=new THREE.PerspectiveCamera(75,window.innerWidth/window.innerHeight,0.1,1000);
+  renderer=new THREE.WebGLRenderer({canvas:document.getElementById('canvas')});
+  renderer.setSize(window.innerWidth,500);
+  player=new THREE.Mesh(new THREE.BoxGeometry(1,2,1),new THREE.MeshBasicMaterial({color:0xDAA520}));
+  scene.add(player);
+  camera.position.z=5;
+}
+
+function startGame(){
+  document.getElementById('start-screen').classList.remove('active');
+  if(!scene) initThree();
+  score=0; currentStage=1; health=100; gameRunning=true;
+  spawnStage(currentStage);
+  gameLoop();
+}
+
+function spawnStage(stage){
+  enemies=[];
+  let enemyCount=5+stage; // more enemies each stage
+  for(let i=0;i<enemyCount;i++){
+
+    let enemy=new THREE.Mesh(new THREE.BoxGeometry(1,2,1),new THREE.MeshBasicMaterial({color:0x8B0000}));
+    enemy.position.set(Math.random()*6-3,0,-10-Math.random()*5);
+    scene.add(enemy);
+    enemies.push(enemy);
+  }
+  spawnBoss(stage);
+  showUnlock("Stage "+stage+" begins — "+stageStories[stage-1].title);
+}
+
+function spawnBoss(stage){
+  let boss=new THREE.Mesh(new THREE.BoxGeometry(2,4,2),new THREE.MeshBasicMaterial({color:0xff0000}));
+  boss.position.set(0,0,-15);
+  scene.add(boss);
+  enemies.push(boss);
+  showUnlock("Boss Appears: "+stageStories[stage-1].boss);
+}
+
+const stageStories=[
+  {title:"Ndwandwe Hills", boss:"Zwide kaLanga"},
+  {title:"Qwabe Territory", boss:"Qwabe Chief"},
+  {title:"Mthethwa Lands", boss:"Dingiswayo"},
+  {title:"Hlubi Stronghold", boss:"Hlubi Leader"},
+  {title:"Final Unification", boss:"Rival Chiefs"}
+];
+
+
+function gameLoop(){
+  if(!gameRunning) return;
+  requestAnimationFrame(gameLoop);
+  enemies.forEach(e=>{
+    e.position.z+=0.05;
+    if(e.position.z>0){
+      takeDamage(5);
+      e.position.z=-10;
+    }
+  });
+  renderer.render(scene,camera);
+}
+
+function takeDamage(amount){
+  health-=amount;
+  updateHealthUI();
+  if(health<=0){ victoryScreen(); }
+}
+
+function updateHealthUI(){
+  document.getElementById('health-fill').style.width=Math.max(0,health)+"%";
+}
+
+function showUnlock(msg){
+  const el=document.getElementById('message');
+  el.innerHTML=msg;
+  el.style.display='block';
+  setTimeout(()=>el.style.display='none',4000);
+}
+
+function victoryScreen(){
+  gameRunning=false;
+  document.getElementById('victory-screen').classList.add('active');
+}
+
+function restartGame(){
+  document.getElementById('victory-screen').classList.remove('active');
+  startGame();
+}
+
+// === Combat Actions ===
+// J = Stab, K = Kick, L = Shield, I = Throw spear, O = Aura, P = Combo
+
+window.addEventListener('keydown',e=>{
+  if(!gameRunning) return;
+  switch(e.key.toLowerCase()){
+    case 'j': stab(); break;
+    case 'k': kick(); break;
+    case 'l': shieldBlock(); break;
+    case 'i': throwSpear(); break;
+    case 'o': glowingAura(); break;
+    case 'p': comboAttack(); break;
+
+  }
+});
+
+function stab(){
+  enemies.forEach(e=>{
+    if(Math.abs(e.position.z)<2){ score+=10; e.position.z=-10; showUnlock("Stab successful!"); }
+  });
+  updateScoreUI();
+}
+
+function kick(){
+  enemies.forEach(e=>{
+    if(Math.abs(e.position.z)<2){ e.position.z-=5; showUnlock("Kick pushed enemy back!"); }
+  });
+}
+
+function shieldBlock(){
+  showUnlock("Shield raised — damage halved!");
+
+}
+
+function throwSpear(){
+  enemies.forEach(e=>{
+    if(Math.abs(e.position.z)<5){ score+=20; e.position.z=-10; showUnlock("Mkhonto throw hit!"); }
+  });
+  updateScoreUI();
+}
+
+function glowingAura(){
+  showUnlock("Glowing Aura — Invincible for 5s!");
+  let oldHealth=health;
+  setTimeout(()=>{ health=oldHealth; },5000);
+}
+
+function comboAttack(){
+  enemies.forEach(e=>{
+    if(Math.abs(e.position.z)<3){ score+=30; e.position.z=-10; showUnlock("Combo attack devastates enemy!"); }
+  });
+
   updateScoreUI();
 }
 
