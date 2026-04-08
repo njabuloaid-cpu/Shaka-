@@ -1,348 +1,161 @@
-
-<!DOCTYPE html>
-<html lang="en">
+<!DOCTYPE html><html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Shaka Zulu: Iklwa Empire • Legendary Edition</title>
+<title>Shaka Zulu: Iklwa Empire 3D+</title>
 <style>
-
-body { margin:0; padding:0; background:#000; color:#fff; font-family:'Press Start 2P',system-ui; overflow:hidden; }
-header { background:#8B0000; padding:10px; display:flex; justify-content:space-between; align-items:center; }
-.title { font-size:22px; color:#DAA520; text-shadow:2px 2px #000; }
-.stats { display:flex; gap:20px; }
-.health-bar { width:140px; height:20px; background:#222; border:3px solid #DAA520; }
-
-.health-fill { height:100%; background:linear-gradient(#00ff00,#00cc00); transition:width 0.3s; }
-#canvas { width:100%; height:500px; border:6px solid #DAA520; background:#111; }
-#message { position:absolute; top:150px; left:50%; transform:translateX(-50%); background:#DAA520; color:#000; padding:12px 30px; font-size:18px; border:6px solid #8B0000; display:none; }
-button { font-family:'Press Start 2P'; font-size:18px; padding:12px 30px; background:#8B0000; color:#fff; border:4px solid #DAA520; cursor:pointer; }
-.overlay { position:absolute; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.9); display:none; align-items:center; justify-content:center; flex-direction:column; }
-.overlay.active { display:flex; }
-
+body { margin:0; overflow:hidden; background:black; font-family:Arial; }
+#menu { position:absolute; width:100%; height:100%; display:flex; flex-direction:column; justify-content:center; align-items:center; color:white; background:#000; z-index:2; }
+button { padding:15px 30px; font-size:18px; margin-top:20px; }
+#ui { position:absolute; top:10px; left:10px; color:white; z-index:2; }
+#controls { position:absolute; bottom:20px; left:50%; transform:translateX(-50%); z-index:2; display:none; }
+.ctrl-btn { width:60px; height:60px; margin:5px; font-size:20px; }
 </style>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r134/three.min.js"></script>
 </head>
-<body>
-<header>
-<div class="title">SHAKA ZULU • IKLWA EMPIRE</div>
-<div class="stats">
-<div>SCORE: <span id="score">00000</span></div>
-<div>HEALTH: <div class="health-bar"><div id="health-fill" class="health-fill" style="width:100%"></div></div></div>
-<div>STAGE: <span id="stage-ui">1</span></div>
-<div>WEAPON: <span id="weapon-ui">IKLWA</span></div>
-</div>
-</header>
-<canvas id="canvas"></canvas>
-<div id="message"></div>
+<body><div id="menu">
+<h1>Shaka Zulu: Iklwa Empire</h1>
+<button onclick="startGame()">Start Game</button>
+</div><div id="ui">HP: 100 | Stage: 1</div><div id="controls">
+<button class="ctrl-btn" onclick="press('w')">↑</button><br>
+<button class="ctrl-btn" onclick="press('a')">←</button>
+<button class="ctrl-btn" onclick="press('s')">↓</button>
+<button class="ctrl-btn" onclick="press('d')">→</button>
+<button class="ctrl-btn" onclick="attack()">⚔️</button>
+</div><script src="https://cdn.jsdelivr.net/npm/three@0.152.2/build/three.min.js"></script><script src="https://cdn.jsdelivr.net/npm/three@0.152.2/examples/js/loaders/GLTFLoader.js"></script><script>
+let scene, camera, renderer, player, enemies = [], keys = {}, mixer;
+let hp = 100, stage = 1;
 
+function init(){
+    scene = new THREE.Scene();
+    scene.background = new THREE.Color(0x222222);
 
-<div id="start-screen" class="overlay active">
-<h1>SHAKA ZULU: LEGENDARY EDITION</h1>
+    camera = new THREE.PerspectiveCamera(75, window.innerWidth/window.innerHeight, 0.1, 1000);
+    camera.position.set(0,5,10);
 
-<button onclick="startGame()">BEGIN THE CONQUEST</button>
-</div>
+    renderer = new THREE.WebGLRenderer({antialias:true});
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    document.body.appendChild(renderer.domElement);
 
-<div id="victory-screen" class="overlay">
-<h1>ZULU EMPIRE UNITED!</h1>
-<button onclick="restartGame()">PLAY AGAIN</button>
-</div>
+    const light = new THREE.DirectionalLight(0xffffff, 1);
+    light.position.set(5,10,7);
+    scene.add(light);
 
-<script>
-let scene, camera, renderer, player, enemies=[];
-let score=0, currentStage=1, gameRunning=false;
-let abilitiesUnlocked={stab:true, shield:false, kick:false, throw:false, aura:false, chant:false};
-let health=100;
+    const ground = new THREE.Mesh(
+        new THREE.PlaneGeometry(100,100),
+        new THREE.MeshStandardMaterial({color:0x228B22})
+    );
+    ground.rotation.x = -Math.PI/2;
+    scene.add(ground);
 
-function initThree(){
-  scene=new THREE.Scene();
-  camera=new THREE.PerspectiveCamera(75,window.innerWidth/window.innerHeight,0.1,1000);
-  renderer=new THREE.WebGLRenderer({canvas:document.getElementById('canvas')});
-  renderer.setSize(window.innerWidth,500);
-  player=new THREE.Mesh(new THREE.BoxGeometry(1,2,1),new THREE.MeshBasicMaterial({color:0xDAA520}));
-  scene.add(player);
-  camera.position.z=5;
-  spawnEnemy();
+    loadPlayer();
+    spawnEnemies(3);
+
+    if(isMobile()) document.getElementById('controls').style.display='block';
+
+    animate();
 }
 
-function spawnEnemy(){
-  let enemy=new THREE.Mesh(new THREE.BoxGeometry(1,2,1),new THREE.MeshBasicMaterial({color:0x8B0000}));
-  enemy.position.x=Math.random()*6-3;
-  enemy.position.z=-10;
-  scene.add(enemy);
-  enemies.push(enemy);
+function loadPlayer(){
+    const loader = new THREE.GLTFLoader();
+    loader.load('https://threejs.org/examples/models/gltf/Soldier.glb', function(gltf){
+        player = gltf.scene;
+        player.scale.set(1.5,1.5,1.5);
+        scene.add(player);
 
+        mixer = new THREE.AnimationMixer(player);
+        const action = mixer.clipAction(gltf.animations[0]);
+        action.play();
+    });
+}
+
+function spawnEnemies(count){
+    enemies.forEach(e=>scene.remove(e));
+    enemies = [];
+
+    for(let i=0;i<count;i++){
+        const enemy = new THREE.Mesh(
+            new THREE.CapsuleGeometry(0.5,1.5),
+            new THREE.MeshStandardMaterial({color:0xff0000})
+        );
+        enemy.position.set(Math.random()*20-10,1,Math.random()*20-10);
+        enemy.hp = 50;
+        enemies.push(enemy);
+        scene.add(enemy);
+    }
+}
+
+function movePlayer(){
+    if(!player) return;
+    if(keys['w']) player.position.z -= 0.2;
+    if(keys['s']) player.position.z += 0.2;
+    if(keys['a']) player.position.x -= 0.2;
+    if(keys['d']) player.position.x += 0.2;
+}
+
+function enemyAI(){
+    enemies.forEach(e=>{
+        const dx = player.position.x - e.position.x;
+        const dz = player.position.z - e.position.z;
+        const dist = Math.sqrt(dx*dx + dz*dz);
+
+        if(dist > 1){
+            e.position.x += dx * 0.01;
+            e.position.z += dz * 0.01;
+        } else {
+            hp -= 0.1;
+        }
+    });
+}
+
+function attack(){
+    enemies.forEach(e=>{
+        const dx = player.position.x - e.position.x;
+        const dz = player.position.z - e.position.z;
+        const dist = Math.sqrt(dx*dx + dz*dz);
+        if(dist < 2){ e.hp -= 25; }
+    });
+
+    enemies = enemies.filter(e=>{
+        if(e.hp <=0){ scene.remove(e); return false; }
+        return true;
+    });
+
+    if(enemies.length === 0){
+        stage++;
+        spawnEnemies(stage + 2);
+    }
+}
+
+function updateUI(){
+    document.getElementById('ui').innerText = `HP: ${Math.floor(hp)} | Stage: ${stage}`;
+}
+
+function animate(){
+    requestAnimationFrame(animate);
+    movePlayer();
+    if(player) enemyAI();
+
+    if(mixer) mixer.update(0.01);
+
+    camera.lookAt(player ? player.position : new THREE.Vector3());
+    renderer.render(scene, camera);
+
+    updateUI();
 }
 
 function startGame(){
-  document.getElementById('start-screen').classList.remove('active');
-  if(!scene) initThree();
-  score=0; currentStage=1; health=100; gameRunning=true;
-  showStageStory(currentStage);
-  gameLoop();
+    document.getElementById('menu').style.display='none';
+    init();
 }
 
-function gameLoop(){
-  if(!gameRunning) return;
-  requestAnimationFrame(gameLoop);
-  enemies.forEach(e=>{
-    e.position.z+=0.05;
-    if(e.position.z>0){
-      takeDamage(5);
-      e.position.z=-10;
-    }
-  });
-  renderer.render(scene,camera);
-}
+function press(key){ keys[key] = true; setTimeout(()=>keys[key]=false,200); }
 
-function takeDamage(amount){
-  if(abilitiesUnlocked.shield){ amount=Math.floor(amount/2); }
-  health-=amount;
-  updateHealthUI();
-  if(health<=0){ victoryScreen(); }
-}
+function isMobile(){ return /Android|iPhone/i.test(navigator.userAgent); }
 
-function updateHealthUI(){
-  document.getElementById('health-fill').style.width=Math.max(0,health)+"%";
-}
-
-function showStageStory(stage){
-  let msg="";
-  switch(stage){
-    case 1: msg="Stage 1: Rise of Shaka — Learn the stab."; break;
-    case 2: msg="Stage 2: Shield unlocked — iHawu strengthens defense."; abilitiesUnlocked.shield=true; break;
-    case 3: msg="Stage 3: Kick unlocked — drive enemies back."; abilitiesUnlocked.kick=true; break;
-    case 4: msg="Stage 4: Mkhonto unlocked — spear throw available."; abilitiesUnlocked.throw=true; break;
-    case 5: msg="Stage 5: Spirit Blessings — glowing aura and chants."; abilitiesUnlocked.aura=true; abilitiesUnlocked.chant=true; break;
-  }
-  showUnlock(msg);
-}
-
-function showUnlock(msg){
-  const el=document.getElementById('message');
-  el.innerHTML=msg;
-  el.style.display='block';
-  setTimeout(()=>el.style.display='none',4000);
-}
-
-function victoryScreen(){
-  gameRunning=false;
-
-  document.getElementById('victory-screen').classList.add('active');
-}
-
-function restartGame(){
-  document.getElementById('victory-screen').classList.remove('active');
-  startGame();
-}
-
-// === Combat Actions with new keys ===
-// J = Stab, K = Kick, L = Shield, I = Throw spear, O = Aura, P = Chant
-window.addEventListener('keydown',e=>{
-  if(!gameRunning) return;
-  switch(e.key.toLowerCase()){
-    case 'j': if(abilitiesUnlocked.stab) stab(); break;
-    case 'k': if(abilitiesUnlocked.kick) kick(); break;
-    case 'l': if(abilitiesUnlocked.shield) showUnlock("Shield raised!"); break;
-    case 'i': if(abilitiesUnlocked.throw) throwSpear(); break;
-    case 'o': if(abilitiesUnlocked.aura) glowingAura(); break;
-    case 'p': if(abilitiesUnlocked.chant) warriorChant(); break;
-  }
+window.addEventListener('keydown', e=>{
+    keys[e.key.toLowerCase()] = true;
+    if(e.key === ' ') attack();
 });
-
-function stab(){
-  enemies.forEach(e=>{
-    if(Math.abs(e.position.z)<2){ score+=10; e.position.z=-10; showUnlock("Stab successful!"); }
-  });
-  updateScoreUI();
-}
-
-function kick(){
-  enemies.forEach(e=>{
-    if(Math.abs(e.position.z)<2){ e.position.z-=5; showUnlock("Kick pushed enemy back!"); }
-  });
-}
-
-function throwSpear(){
-  enemies.forEach(e=>{
-    if(Math.abs(e.position.z)<5){ score+=20; e.position.z=-10; showUnlock("Mkhonto throw hit!"); }
-  });
-  updateScoreUI();
-}
-
-function glowingAura(){
-  showUnlock("Glowing Aura — Invincible for 5s!");
-  let oldHealth=health;
-  setTimeout(()=>{ health=oldHealth; },5000);
-}
-
-function warriorChant(){
-  showUnlock("Warrior Chant — morale boosted!");
-  score+=50;
-  updateScoreUI();
-}
-
-function updateScoreUI(){
-  document.getElementById('score').innerText=String(score).padStart(5,'0');
-}
-</script>
-</body>
-</html>
-Show quoted text
---
-Show quoted text
-Show quoted text
-let health=100;
-
-// === Setup ===
-
-function initThree(){
-  scene=new THREE.Scene();
-  camera=new THREE.PerspectiveCamera(75,window.innerWidth/window.innerHeight,0.1,1000);
-  renderer=new THREE.WebGLRenderer({canvas:document.getElementById('canvas')});
-  renderer.setSize(window.innerWidth,500);
-  player=new THREE.Mesh(new THREE.BoxGeometry(1,2,1),new THREE.MeshBasicMaterial({color:0xDAA520}));
-  scene.add(player);
-  camera.position.z=5;
-}
-
-function startGame(){
-  document.getElementById('start-screen').classList.remove('active');
-  if(!scene) initThree();
-  score=0; currentStage=1; health=100; gameRunning=true;
-  spawnStage(currentStage);
-  gameLoop();
-}
-
-function spawnStage(stage){
-  enemies=[];
-  let enemyCount=5+stage; // more enemies each stage
-  for(let i=0;i<enemyCount;i++){
-
-    let enemy=new THREE.Mesh(new THREE.BoxGeometry(1,2,1),new THREE.MeshBasicMaterial({color:0x8B0000}));
-    enemy.position.set(Math.random()*6-3,0,-10-Math.random()*5);
-    scene.add(enemy);
-    enemies.push(enemy);
-  }
-  spawnBoss(stage);
-  showUnlock("Stage "+stage+" begins — "+stageStories[stage-1].title);
-}
-
-function spawnBoss(stage){
-  let boss=new THREE.Mesh(new THREE.BoxGeometry(2,4,2),new THREE.MeshBasicMaterial({color:0xff0000}));
-  boss.position.set(0,0,-15);
-  scene.add(boss);
-  enemies.push(boss);
-  showUnlock("Boss Appears: "+stageStories[stage-1].boss);
-}
-
-const stageStories=[
-  {title:"Ndwandwe Hills", boss:"Zwide kaLanga"},
-  {title:"Qwabe Territory", boss:"Qwabe Chief"},
-  {title:"Mthethwa Lands", boss:"Dingiswayo"},
-  {title:"Hlubi Stronghold", boss:"Hlubi Leader"},
-  {title:"Final Unification", boss:"Rival Chiefs"}
-];
-
-
-function gameLoop(){
-  if(!gameRunning) return;
-  requestAnimationFrame(gameLoop);
-  enemies.forEach(e=>{
-    e.position.z+=0.05;
-    if(e.position.z>0){
-      takeDamage(5);
-      e.position.z=-10;
-    }
-  });
-  renderer.render(scene,camera);
-}
-
-function takeDamage(amount){
-  health-=amount;
-  updateHealthUI();
-  if(health<=0){ victoryScreen(); }
-}
-
-function updateHealthUI(){
-  document.getElementById('health-fill').style.width=Math.max(0,health)+"%";
-}
-
-function showUnlock(msg){
-  const el=document.getElementById('message');
-  el.innerHTML=msg;
-  el.style.display='block';
-  setTimeout(()=>el.style.display='none',4000);
-}
-
-function victoryScreen(){
-  gameRunning=false;
-  document.getElementById('victory-screen').classList.add('active');
-}
-
-function restartGame(){
-  document.getElementById('victory-screen').classList.remove('active');
-  startGame();
-}
-
-// === Combat Actions ===
-// J = Stab, K = Kick, L = Shield, I = Throw spear, O = Aura, P = Combo
-
-window.addEventListener('keydown',e=>{
-  if(!gameRunning) return;
-  switch(e.key.toLowerCase()){
-    case 'j': stab(); break;
-    case 'k': kick(); break;
-    case 'l': shieldBlock(); break;
-    case 'i': throwSpear(); break;
-    case 'o': glowingAura(); break;
-    case 'p': comboAttack(); break;
-
-  }
-});
-
-function stab(){
-  enemies.forEach(e=>{
-    if(Math.abs(e.position.z)<2){ score+=10; e.position.z=-10; showUnlock("Stab successful!"); }
-  });
-  updateScoreUI();
-}
-
-function kick(){
-  enemies.forEach(e=>{
-    if(Math.abs(e.position.z)<2){ e.position.z-=5; showUnlock("Kick pushed enemy back!"); }
-  });
-}
-
-function shieldBlock(){
-  showUnlock("Shield raised — damage halved!");
-
-}
-
-function throwSpear(){
-  enemies.forEach(e=>{
-    if(Math.abs(e.position.z)<5){ score+=20; e.position.z=-10; showUnlock("Mkhonto throw hit!"); }
-  });
-  updateScoreUI();
-}
-
-function glowingAura(){
-  showUnlock("Glowing Aura — Invincible for 5s!");
-  let oldHealth=health;
-  setTimeout(()=>{ health=oldHealth; },5000);
-}
-
-function comboAttack(){
-  enemies.forEach(e=>{
-    if(Math.abs(e.position.z)<3){ score+=30; e.position.z=-10; showUnlock("Combo attack devastates enemy!"); }
-  });
-
-  updateScoreUI();
-}
-
-function updateScoreUI(){
-  document.getElementById('score').innerText=String(score).padStart(5,'0');
-}
-</script>
-</body>
+window.addEventListener('keyup', e=>{ keys[e.key.toLowerCase()] = false; });
+</script></body>
 </html>
